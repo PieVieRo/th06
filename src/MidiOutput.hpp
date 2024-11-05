@@ -66,8 +66,6 @@ struct MidiOutput : MidiTimer
     void ClearTracks();
     ZunResult ReadFileData(u32 idx, char *path);
     void ReleaseFileData(u32 idx);
-    void ParseFile(u32 idx);
-
     ZunResult ParseFile(i32 idx);
     ZunResult LoadFile(char *midiPath);
     ZunResult Play();
@@ -82,7 +80,7 @@ struct MidiOutput : MidiTimer
     i32 numTracks;
     u32 format;
     u32 division;
-    u32 unk120;
+    u32 tempo;
     u32 unk124;
     f64 unk128;
     f64 unk130;
