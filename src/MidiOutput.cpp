@@ -159,7 +159,7 @@ MidiOutput::MidiOutput()
 {
     this->tracks = NULL;
     this->division = 0;
-    this->unk120 = 0;
+    this->tempo = 0;
     this->numTracks = 0;
     this->unk2c4 = 0;
     this->fadeOutVolumeMultiplier = 0;
@@ -294,7 +294,7 @@ ZunResult MidiOutput::ReadFileData(u32 idx, char *path)
 
     this->midiFileData[idx] = FileSystem::OpenPath(path, false);
 
-    if (this->midiFileData[idx] == (byte *)0x0)
+    if (this->midiFileData[idx] == NULL)
     {
         g_GameErrorContext.Log(&g_GameErrorContext, TH_ERR_MIDI_FAILED_TO_READ_FILE, path);
         return ZUN_ERROR;
@@ -320,6 +320,101 @@ ZunResult MidiOutput::LoadFile(char *midiPath)
 
     this->ParseFile(0x1f);
     this->ReleaseFileData(0x1f);
+
+    return ZUN_SUCCESS;
+}
+
+static inline u32 Ntohl(u32 val)
+{
+    u32 tmp;
+
+    ((u8 *)&tmp)[0] = ((u8 *)&val)[3];
+    ((u8 *)&tmp)[1] = ((u8 *)&val)[2];
+    ((u8 *)&tmp)[2] = ((u8 *)&val)[1];
+    ((u8 *)&tmp)[3] = ((u8 *)&val)[0];
+
+    return tmp;
+}
+
+struct MidiChunkHeader
+{
+    u32 flags;
+    u32 size;
+};
+
+struct MidiMainInfo
+{
+    u16 format;
+    u16 numTracks;
+    u16 division;
+};
+
+struct MidiTrackHeader
+{
+    u32 track;
+    u32 size;
+};
+
+union MidiHeaderHell {
+    MidiChunkHeader header;
+    MidiMainInfo info;
+    MidiTrackHeader track;
+    u8 raw[0];
+};
+
+#pragma var_order(i, current, track, hdrSize, data, hdrSize, chunkHdr, numTracks_stack, size, info)
+ZunResult MidiOutput::ParseFile(u32 idx)
+{
+    u8 *data;
+    MidiHeaderHell *current;
+    MidiMainInfo *info;
+    MidiTrackHeader *track;
+    MidiChunkHeader chunkHdr;
+    i32 i;
+    i32 numTracks_stack;
+    i32 hdrSize;
+    i32 size;
+
+    this->ClearTracks();
+
+    current = (MidiHeaderHell *)this->midiFileData[idx];
+    data = (u8 *)current;
+
+    if (current == NULL)
+    {
+        utils::DebugPrint2(TH_ERR_MIDI_FAILED_TO_PLAY);
+        return ZUN_ERROR;
+    }
+
+    chunkHdr = current->header;
+    current = (MidiHeaderHell *)(&current->raw[0] + sizeof(MidiChunkHeader));
+    hdrSize = Ntohl(chunkHdr.size);
+    info = (MidiMainInfo*)current;
+    current = (MidiHeaderHell *)(&current->raw[0] + hdrSize);
+
+    this->format = MidiOutput::Ntohs(info->format);
+    this->division = MidiOutput::Ntohs(info->division);
+    this->numTracks = MidiOutput::Ntohs(info->numTracks);
+    numTracks_stack = this->numTracks * sizeof(MidiTrack);
+
+    this->tracks = (MidiTrack *)malloc(numTracks_stack);
+    memset(this->tracks, 0, this->numTracks * sizeof(MidiTrack));
+
+    for (i = 0; i < this->numTracks; i++)
+    {
+        track = (MidiTrackHeader *)current;
+        current = (MidiHeaderHell *)(&current->raw[0] + sizeof(MidiTrackHeader));
+        size = Ntohl(track->size);
+
+        this->tracks[i].trackLength = size;
+        this->tracks[i].trackData = (u8 *)malloc(size);
+        this->tracks[i].trackPlaying = 1;
+        memcpy(this->tracks[i].trackData, current, size);
+
+        current = (MidiHeaderHell *)(&current->raw[0] + size);
+    }
+
+    this->tempo = 1000000;
 
     return ZUN_SUCCESS;
 }
@@ -351,12 +446,12 @@ u32 MidiOutput::SetFadeOut(u32 ms)
 
 u16 MidiOutput::Ntohs(u16 val)
 {
-    u8 tmp[2];
+    u16 tmp;
 
-    tmp[0] = ((u8 *)&val)[1];
-    tmp[1] = ((u8 *)&val)[0];
+    ((u8 *)&tmp)[0] = ((u8 *)&val)[1];
+    ((u8 *)&tmp)[1] = ((u8 *)&val)[0];
 
-    return *(const u16 *)(&tmp);
+    return tmp;
 }
 
 u32 MidiOutput::SkipVariableLength(u8 **curTrackDataCursor)
