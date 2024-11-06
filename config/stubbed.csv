@@ -6,8 +6,6 @@ th06::ResultScreen::LinkScoreEx
 th06::ResultScreen::DeletedCallback
 th06::ResultScreen::HandleResultKeyboard
 th06::ResultScreen::HandleReplaySaveKeyboard
-th06::AsciiManager::DrawPopupsWithHwVertexProcessing
-th06::AsciiManager::DrawPopupsWithoutHwVertexProcessing
 th06::ResultScreen::GetHighScore
 th06::MusicRoom::RegisterChain
 th06::ResultScreen::ReleaseScoreDat
