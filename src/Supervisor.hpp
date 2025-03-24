@@ -5,6 +5,7 @@
 #include <dinput.h>
 
 #include "Chain.hpp"
+#include "Controller.hpp"
 #include "MidiOutput.hpp"
 #include "ZunBool.hpp"
 #include "ZunResult.hpp"
@@ -14,6 +15,8 @@
 
 namespace th06
 {
+#define GAME_VERSION 0x102
+
 enum GameConfigOptsShifts
 {
     GCOS_USE_D3D_HW_TEXTURE_BLENDING = 0x0,
@@ -74,11 +77,6 @@ struct GameConfiguration
     {
         return this->opts >> GCOS_NO_COLOR_COMP & 1 | this->opts >> GCOS_USE_D3D_HW_TEXTURE_BLENDING & 1;
     }
-
-    u32 IsUnknown()
-    {
-        return this->opts >> GCOS_CLEAR_BACKBUFFER_ON_REFRESH & 1 | this->opts >> GCOS_DISPLAY_MINIMUM_GRAPHICS & 1;
-    }
 };
 
 #define IN_PBG3_INDEX 0
@@ -121,6 +119,8 @@ struct Supervisor
     ZunResult FadeOutMusic(f32 fadeOutSeconds);
 
     static ZunResult SetupDInput(Supervisor *s);
+    static BOOL CALLBACK ControllerCallback(LPCDIDEVICEOBJECTINSTANCEA lpddoi, LPVOID pvRef);
+    static BOOL CALLBACK EnumGameControllersCb(LPCDIDEVICEINSTANCEA pdidInstance, LPVOID pContext);
 
     i32 LoadPbg3(i32 pbg3FileIdx, char *filename);
     void ReleasePbg3(i32 pbg3FileIdx);
@@ -132,6 +132,17 @@ struct Supervisor
     f32 FramerateMultiplier()
     {
         return this->effectiveFramerateMultiplier;
+    }
+
+    u32 IsUnknown()
+    {
+        return this->cfg.opts >> GCOS_CLEAR_BACKBUFFER_ON_REFRESH & 1 |
+               this->cfg.opts >> GCOS_DISPLAY_MINIMUM_GRAPHICS & 1;
+    }
+
+    u32 ShouldRunAt60Fps()
+    {
+        return (this->cfg.opts >> GCOS_FORCE_60FPS & 1) && this->vsyncEnabled;
     }
 
     HINSTANCE hInstance;
@@ -178,52 +189,6 @@ struct Supervisor
     D3DCAPS8 d3dCaps;
 };
 C_ASSERT(sizeof(Supervisor) == 0x4d8);
-
-enum TouhouButton
-{
-    TH_BUTTON_SHOOT = 1 << 0,
-    TH_BUTTON_BOMB = 1 << 1,
-    TH_BUTTON_FOCUS = 1 << 2,
-    TH_BUTTON_MENU = 1 << 3,
-    TH_BUTTON_UP = 1 << 4,
-    TH_BUTTON_DOWN = 1 << 5,
-    TH_BUTTON_LEFT = 1 << 6,
-    TH_BUTTON_RIGHT = 1 << 7,
-    TH_BUTTON_SKIP = 1 << 8,
-    TH_BUTTON_Q = 1 << 9,
-    TH_BUTTON_S = 1 << 10,
-    TH_BUTTON_HOME = 1 << 11,
-    TH_BUTTON_ENTER = 1 << 12,
-
-    TH_BUTTON_UP_LEFT = TH_BUTTON_UP | TH_BUTTON_LEFT,
-    TH_BUTTON_UP_RIGHT = TH_BUTTON_UP | TH_BUTTON_RIGHT,
-    TH_BUTTON_DOWN_LEFT = TH_BUTTON_DOWN | TH_BUTTON_LEFT,
-    TH_BUTTON_DOWN_RIGHT = TH_BUTTON_DOWN | TH_BUTTON_RIGHT,
-    TH_BUTTON_DIRECTION = TH_BUTTON_DOWN | TH_BUTTON_RIGHT | TH_BUTTON_UP | TH_BUTTON_LEFT,
-
-    TH_BUTTON_SELECTMENU = TH_BUTTON_ENTER | TH_BUTTON_SHOOT,
-    TH_BUTTON_RETURNMENU = TH_BUTTON_MENU | TH_BUTTON_BOMB,
-    TH_BUTTON_WRONG_CHEATCODE =
-        TH_BUTTON_SHOOT | TH_BUTTON_BOMB | TH_BUTTON_MENU | TH_BUTTON_Q | TH_BUTTON_S | TH_BUTTON_ENTER,
-    TH_BUTTON_ANY = 0xFFFF,
-};
-
-namespace Controller
-{
-u16 GetJoystickCaps(void);
-u32 SetButtonFromControllerInputs(u16 *outButtons, i16 controllerButtonToTest, enum TouhouButton touhouButton,
-                                  u32 inputButtons);
-
-unsigned int SetButtonFromDirectInputJoystate(u16 *outButtons, i16 controllerButtonToTest,
-                                              enum TouhouButton touhouButton, u8 *inputButtons);
-
-u16 GetControllerInput(u16 buttons);
-u8 *GetControllerState();
-u16 GetInput(void);
-BOOL CALLBACK ControllerCallback(LPCDIDEVICEOBJECTINSTANCEA lpddoi, LPVOID pvRef);
-BOOL CALLBACK EnumGameControllersCb(LPCDIDEVICEINSTANCEA pdidInstance, LPVOID pContext);
-void ResetKeyboard(void);
-}; // namespace Controller
 
 DIFFABLE_EXTERN(ControllerMapping, g_ControllerMapping)
 DIFFABLE_EXTERN(Supervisor, g_Supervisor)

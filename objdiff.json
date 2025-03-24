@@ -27,14 +27,6 @@
             "reverse_fn_order": false
         },
         {
-            "name": "AnmVm",
-
-            "target_path": "build/objdiff/orig/AnmVm.obj",
-            "base_path": "build/objdiff/reimpl/AnmVm.obj",
-
-            "reverse_fn_order": false
-        },
-        {
             "name": "AsciiManager",
 
             "target_path": "build/objdiff/orig/AsciiManager.obj",
@@ -67,6 +59,22 @@
             "reverse_fn_order": false
         },
         {
+            "name": "CMyFont",
+
+            "target_path": "build/objdiff/orig/CMyFont.obj",
+            "base_path": "build/objdiff/reimpl/CMyFont.obj",
+
+            "reverse_fn_order": false
+        },
+        {
+            "name": "Controller",
+
+            "target_path": "build/objdiff/orig/Controller.obj",
+            "base_path": "build/objdiff/reimpl/Controller.obj",
+
+            "reverse_fn_order": false
+        },
+        {
             "name": "EclManager",
 
             "target_path": "build/objdiff/orig/EclManager.obj",
@@ -91,10 +99,10 @@
             "reverse_fn_order": false
         },
         {
-            "name": "Enemy",
+            "name": "EnemyEclInstr",
 
-            "target_path": "build/objdiff/orig/Enemy.obj",
-            "base_path": "build/objdiff/reimpl/Enemy.obj",
+            "target_path": "build/objdiff/orig/EnemyEclInstr.obj",
+            "base_path": "build/objdiff/reimpl/EnemyEclInstr.obj",
 
             "reverse_fn_order": false
         },
@@ -155,14 +163,6 @@
             "reverse_fn_order": false
         },
         {
-            "name": "GuiImpl",
-
-            "target_path": "build/objdiff/orig/GuiImpl.obj",
-            "base_path": "build/objdiff/reimpl/GuiImpl.obj",
-
-            "reverse_fn_order": false
-        },
-        {
             "name": "IPbg3Parser",
 
             "target_path": "build/objdiff/orig/IPbg3Parser.obj",
@@ -199,6 +199,14 @@
 
             "target_path": "build/objdiff/orig/MidiOutput.obj",
             "base_path": "build/objdiff/reimpl/MidiOutput.obj",
+
+            "reverse_fn_order": false
+        },
+        {
+            "name": "MusicRoom",
+
+            "target_path": "build/objdiff/orig/MusicRoom.obj",
+            "base_path": "build/objdiff/reimpl/MusicRoom.obj",
 
             "reverse_fn_order": false
         },

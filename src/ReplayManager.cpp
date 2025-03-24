@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "Controller.hpp"
 #include "FileSystem.hpp"
 #include "GameManager.hpp"
 #include "Gui.hpp"
@@ -60,7 +61,7 @@ ZunResult ReplayManager::ValidateReplayData(ReplayData *data, i32 fileSize)
         return ZUN_ERROR;
     }
 
-    if (decryptedData->version != 0x102)
+    if (decryptedData->version != GAME_VERSION)
     {
         return ZUN_ERROR;
     }

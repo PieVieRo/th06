@@ -15,7 +15,7 @@ class GameErrorContext
   public:
     char m_Buffer[0x800];
     char *m_BufferEnd;
-    u8 m_ShowMessageBox;
+    i8 m_ShowMessageBox;
 
     GameErrorContext()
     {
@@ -30,10 +30,11 @@ class GameErrorContext
     {
     }
 
-    void RstContext()
+    void ResetContext()
     {
         m_BufferEnd = m_Buffer;
-        m_Buffer[0] = '\0';
+        m_BufferEnd[0] = '\0';
+        // TODO: check if it should be m_Buffer[0] above.
     }
 
     void Flush();

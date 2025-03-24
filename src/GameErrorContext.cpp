@@ -1,11 +1,37 @@
 #include <windows.h>
 
+#include "CMyFont.hpp"
 #include "GameErrorContext.hpp"
 #include <stdio.h>
 
 namespace th06
 {
 DIFFABLE_STATIC(GameErrorContext, g_GameErrorContext)
+DIFFABLE_STATIC(CMyFont, g_CMyFont)
+
+const char *GameErrorContext::Log(GameErrorContext *ctx, const char *fmt, ...)
+{
+    char tmpBuffer[512];
+    size_t tmpBufferSize;
+    va_list args;
+
+    va_start(args, fmt);
+    vsprintf(tmpBuffer, fmt, args);
+
+    tmpBufferSize = strlen(tmpBuffer);
+
+    if (ctx->m_BufferEnd + tmpBufferSize < &ctx->m_Buffer[sizeof(ctx->m_Buffer) - 1])
+    {
+        strcpy(ctx->m_BufferEnd, tmpBuffer);
+
+        ctx->m_BufferEnd += tmpBufferSize;
+        *ctx->m_BufferEnd = '\0';
+    }
+
+    va_end(args);
+
+    return fmt;
+}
 
 const char *GameErrorContext::Fatal(GameErrorContext *ctx, const char *fmt, ...)
 {
@@ -29,30 +55,6 @@ const char *GameErrorContext::Fatal(GameErrorContext *ctx, const char *fmt, ...)
     va_end(args);
 
     ctx->m_ShowMessageBox = true;
-
-    return fmt;
-}
-
-const char *GameErrorContext::Log(GameErrorContext *ctx, const char *fmt, ...)
-{
-    char tmpBuffer[512];
-    size_t tmpBufferSize;
-    va_list args;
-
-    va_start(args, fmt);
-    vsprintf(tmpBuffer, fmt, args);
-
-    tmpBufferSize = strlen(tmpBuffer);
-
-    if (ctx->m_BufferEnd + tmpBufferSize < &ctx->m_Buffer[sizeof(ctx->m_Buffer) - 1])
-    {
-        strcpy(ctx->m_BufferEnd, tmpBuffer);
-
-        ctx->m_BufferEnd += tmpBufferSize;
-        *ctx->m_BufferEnd = '\0';
-    }
-
-    va_end(args);
 
     return fmt;
 }

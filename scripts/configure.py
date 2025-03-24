@@ -40,7 +40,7 @@ def configure(build_type):
         writer.variable("link", "link.exe")
         writer.variable(
             "th06_link_flags",
-            "/subsystem:windows /machine:X86 /filealign:4096 /incremental:no /opt:ref",
+            "/subsystem:windows /machine:X86 /filealign:4096 /incremental:no /opt:ref /map /mapinfo:exports /mapinfo:lines",
         )
 
         writer.variable("msvc_deps_prefix", "Note: including file:")
@@ -63,7 +63,7 @@ def configure(build_type):
         writer.rule("rc", "$rc /fo $out $in")
         writer.rule(
             "link",
-            "$link $link_flags /nologo /out:$out $link_libs $in",
+            "$link $link_flags /nologo /out:$out $link_libs $in /order:@config/order.txt",
         )
         writer.rule(
             "copyicon",
@@ -92,25 +92,22 @@ def configure(build_type):
 
         cxx_sources = [
             "AsciiManager",
-            "AnmVm",
             "Stage",
             "BombData",
             "EclManager",
-            "Enemy",  # ECL instructions.
+            "EnemyEclInstr",
             "EffectManager",
             "Ending",
             "EnemyManager",
             "BulletManager",
             "Gui",
-            "GuiImpl",
             "GameManager",
             "Chain",
-            # Controller
+            "Controller",
+            "CMyFont",
             "FileSystem",
             "GameErrorContext",
             "Rng",
-            "ReplayManager",
-            "ResultScreen",
             "utils",
             "TextHelper",
             "ItemManager",
@@ -118,10 +115,10 @@ def configure(build_type):
             "GameWindow",
             "MidiOutput",
             "Supervisor",
-            # MusicRoom
+            "MusicRoom",
             "Player",
-            # ReplayManager
-            # ResultScreen
+            "ReplayManager",
+            "ResultScreen",
             "ScreenEffect",
             "SoundPlayer",
             "AnmManager",
@@ -292,6 +289,7 @@ def configure(build_type):
             "$builddir/th06e.exe",
             "link",
             inputs=objfiles,
+            implicit="config/order.txt",
             variables={
                 "link_libs": th06_link_libs,
                 "link_flags": "$th06_link_flags /debug /pdb:$builddir/th06e.pdb",

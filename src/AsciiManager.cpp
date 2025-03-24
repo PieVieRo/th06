@@ -3,6 +3,7 @@
 
 #include "AnmManager.hpp"
 #include "ChainPriorities.hpp"
+#include "Controller.hpp"
 #include "GameManager.hpp"
 #include "Gui.hpp"
 #include "Supervisor.hpp"
@@ -18,12 +19,10 @@ DIFFABLE_STATIC(ChainElem, g_AsciiManagerOnDrawPopupsChain)
 
 AsciiManager::AsciiManager()
 {
-    i32 pad01, pad02, pad03, pad04, pad05, pad06, pad07, pad08;
 }
 
 StageMenu::StageMenu()
 {
-    i32 pad01, pad02, pad03, pad04;
 }
 
 ChainCallbackResult AsciiManager::OnUpdate(AsciiManager *mgr)
@@ -700,7 +699,7 @@ i32 StageMenu::OnUpdateRetryMenu()
         this->menuSprites[RETRY_MENU_SPRITE_NO].scaleX = 1.5f;
         this->menuSprites[RETRY_MENU_SPRITE_YES].posOffset = D3DXVECTOR3(-4.0f, -4.0f, 0.0f);
         this->menuSprites[RETRY_MENU_SPRITE_NO].posOffset = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-        if (3 < this->numFrames)
+        if (4 <= this->numFrames)
         {
             if (WAS_PRESSED(TH_BUTTON_UP) || WAS_PRESSED(TH_BUTTON_DOWN))
             {

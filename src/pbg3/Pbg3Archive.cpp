@@ -19,7 +19,11 @@ i32 Pbg3Archive::ParseHeader()
 {
     if (this->parser->ReadMagic() != 0x33474250)
     {
-        delete this->parser;
+        if (this->parser != NULL)
+        {
+            delete this->parser;
+            this->parser = NULL;
+        }
         return FALSE;
     }
 
@@ -27,14 +31,22 @@ i32 Pbg3Archive::ParseHeader()
     this->fileTableOffset = this->parser->ReadVarInt();
     if (this->parser->SeekToOffset(this->fileTableOffset) == FALSE)
     {
-        delete this->parser;
+        if (this->parser != NULL)
+        {
+            delete this->parser;
+            this->parser = NULL;
+        }
         return FALSE;
     }
 
     this->entries = new Pbg3Entry[this->numOfEntries];
     if (this->entries == NULL)
     {
-        delete this->parser;
+        if (this->parser != NULL)
+        {
+            delete this->parser;
+            this->parser = NULL;
+        }
         return FALSE;
     }
 
@@ -47,8 +59,17 @@ i32 Pbg3Archive::ParseHeader()
         this->entries[idx].uncompressedSize = this->parser->ReadVarInt();
         if (this->parser->ReadString(this->entries[idx].filename, sizeof(this->entries[idx].filename)) == FALSE)
         {
-            delete this->parser;
-            delete[] this->entries;
+            if (this->parser != NULL)
+            {
+                delete this->parser;
+                this->parser = NULL;
+            }
+            if (this->entries != NULL)
+            {
+                delete[] this->entries;
+                this->entries = NULL;
+            }
+
             return FALSE;
         }
     }
@@ -71,20 +92,15 @@ i32 Pbg3Archive::Release()
         this->entries = NULL;
     }
     delete this->unk;
-    return 1;
+    return TRUE;
 }
 
 i32 Pbg3Archive::FindEntry(char *path)
 {
-    if (this->numOfEntries == 0)
-    {
-        return -1;
-    }
-
     for (u32 entryIdx = 0; entryIdx < this->numOfEntries; entryIdx += 1)
     {
         char *entryFilename = this->entries[entryIdx].filename;
-        i32 res = strcmp(entryFilename, path);
+        i32 res = strcmp(path, entryFilename);
         if (res == 0)
         {
             return entryIdx;
@@ -95,7 +111,7 @@ i32 Pbg3Archive::FindEntry(char *path)
 
 u32 Pbg3Archive::GetEntrySize(u32 entryIdx)
 {
-    if (this->numOfEntries <= entryIdx)
+    if (entryIdx >= this->numOfEntries)
     {
         return 0;
     }
@@ -154,6 +170,11 @@ Pbg3Archive::~Pbg3Archive()
 
 i32 Pbg3Archive::Load(char *path)
 {
+    if (this->Release() == FALSE)
+    {
+        return FALSE;
+    }
+
     this->parser = new Pbg3Parser();
     if (this->parser == NULL)
     {
@@ -162,7 +183,11 @@ i32 Pbg3Archive::Load(char *path)
 
     if (this->parser->OpenArchive(path) == FALSE)
     {
-        delete this->parser;
+        if (this->parser != NULL)
+        {
+            delete this->parser;
+            this->parser = NULL;
+        }
         return FALSE;
     }
 
@@ -173,124 +198,145 @@ i32 Pbg3Archive::Load(char *path)
 #define LZSS_DICTSIZE_MASK 0x1fff
 #define LZSS_MIN_MATCH 3
 
-class BitStream
-{
-  public:
-    BitStream(u8 *data, u32 size) : data(data), size(size), curByte(0), curByteIdx(0), curBitIdx(0x80), m_checksum(0)
-    {
-    }
-    u32 Read(u32 numBits)
-    {
-        u32 ret = 0;
-        while (numBits != 0)
-        {
-            if (this->curBitIdx == 0x80)
-            {
-                this->curByte = *this->data;
-                if (this->curByteIdx < this->size)
-                {
-                    this->data += 1;
-                    this->curByteIdx += 1;
-                }
-                else
-                {
-                    this->curByte = 0;
-                }
-                this->m_checksum += this->curByte;
-            }
-            if ((this->curByte & this->curBitIdx) != 0)
-            {
-                ret |= (1 << (numBits - 1));
-            }
-            numBits--;
-            this->curBitIdx >>= 1;
-            if (this->curBitIdx == 0)
-            {
-                this->curBitIdx = 0x80;
-            }
-        }
-        return ret;
+#define DEC_NEXT_BIT()                                                                                                 \
+    inBitMask >>= 1;                                                                                                   \
+    if (inBitMask == 0)                                                                                                \
+    {                                                                                                                  \
+        inBitMask = 0x80;                                                                                              \
     }
 
-    u32 checksum()
-    {
-        return this->m_checksum;
+#define DEC_WRITE_BYTE(data)                                                                                           \
+    *outCursor++ = data;                                                                                               \
+    dict[dictHead] = data;                                                                                             \
+    dictHead = (dictHead + 1) & LZSS_DICTSIZE_MASK;
+
+#define DEC_HANDLE_FETCH_NEW_BYTE()                                                                                    \
+    if (inBitMask == 0x80)                                                                                             \
+    {                                                                                                                  \
+        currByte = *inCursor;                                                                                          \
+        if (inCursor - rawData >= (i32)size)                                                                           \
+        {                                                                                                              \
+            currByte = 0;                                                                                              \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            inCursor++;                                                                                                \
+        }                                                                                                              \
+        checksum += currByte;                                                                                          \
     }
 
-  private:
-    u8 *data;
-    u8 curByte;
-    u32 curByteIdx;
-    u32 curBitIdx;
-    u32 size;
-    u32 m_checksum;
-};
+#define DEC_READ_FLAG_BIT()                                                                                            \
+    DEC_HANDLE_FETCH_NEW_BYTE();                                                                                       \
+    opcode = currByte & inBitMask;                                                                                     \
+    DEC_NEXT_BIT();
+
+#define DEC_READ_BITS(bitsCount)                                                                                       \
+    outBitMask = 0x01 << (bitsCount - 1);                                                                              \
+    inBits = 0;                                                                                                        \
+    while (outBitMask != 0)                                                                                            \
+    {                                                                                                                  \
+        DEC_HANDLE_FETCH_NEW_BYTE();                                                                                   \
+        if ((currByte & inBitMask) != 0)                                                                               \
+        {                                                                                                              \
+            inBits |= outBitMask;                                                                                      \
+        }                                                                                                              \
+        outBitMask >>= 1;                                                                                              \
+        DEC_NEXT_BIT();                                                                                                \
+    }
 
 u8 *Pbg3Archive::ReadDecompressEntry(u32 entryIdx, char *filename)
 {
-    if (entryIdx >= this->numOfEntries)
+    if (entryIdx >= this->numOfEntries || this->parser == NULL)
         return NULL;
 
-    if (this->parser == NULL)
-        return NULL;
-
-    u32 size = this->entries[entryIdx].uncompressedSize;
+    u32 size = this->GetEntrySize(entryIdx);
     u8 *out = (u8 *)malloc(size);
     if (out == NULL)
         return NULL;
+
+    u8 *outCursor = out;
 
     u32 expectedCsum;
     u8 *rawData = this->ReadEntryRaw(&size, &expectedCsum, entryIdx);
 
     if (rawData == NULL)
     {
-        free(out);
+        if (out != NULL)
+        {
+            free(out);
+            out = NULL;
+        }
         return NULL;
     }
 
-    u8 dict[LZSS_DICTSIZE];
-    memset(dict, 0, sizeof(dict));
+    u8 *inCursor = rawData;
+    u8 inBitMask = 0x80;
+    u32 checksum = 0;
     u32 dictHead = 1;
 
-    u32 bytesWritten = 0;
+    u8 dict[LZSS_DICTSIZE];
 
-    BitStream bs = BitStream(rawData, size);
-    while (TRUE)
+    // Memset doesn't produce matching assembly
+    for (i32 i = 0; i < LZSS_DICTSIZE; i++)
     {
-        if (bs.Read(1) != 0)
+        dict[i] = 0;
+    }
+
+    u32 currByte;
+    u32 inBits;
+    u32 outBitMask;
+    u32 matchOffset;
+    u32 opcode;
+
+    for (;;)
+    {
+        DEC_READ_FLAG_BIT();
+
+        // Read literal byte from next 8 bits
+        if (opcode != 0)
         {
-            u8 c = bs.Read(8);
-            out[bytesWritten] = c;
-            bytesWritten += 1;
-            dict[dictHead] = c;
-            dictHead = (dictHead + 1) & LZSS_DICTSIZE_MASK;
+            DEC_READ_BITS(8);
+            DEC_WRITE_BYTE(inBits);
         }
+        // Copy from dictionary, 13 bit offset, then 4 bit length
         else
         {
-            u32 matchOffset = bs.Read(13);
-            if (!matchOffset)
-                break;
+            DEC_READ_BITS(13);
 
-            u32 matchLen = bs.Read(4) + LZSS_MIN_MATCH;
-
-            for (u32 i = 0; i < matchLen; ++i)
+            matchOffset = inBits;
+            if (matchOffset == 0)
             {
-                u8 c = dict[(matchOffset + i) & LZSS_DICTSIZE_MASK];
-                out[bytesWritten] = c;
-                bytesWritten += 1;
-                dict[dictHead] = c;
-                dictHead = (dictHead + 1) & LZSS_DICTSIZE_MASK;
+                break;
+            }
+
+            DEC_READ_BITS(4);
+
+            for (i32 i = 0; i <= (i32)inBits + 2; i++)
+            {
+                u32 c = dict[(matchOffset + i) & LZSS_DICTSIZE_MASK];
+                DEC_WRITE_BYTE(c);
             }
         }
     }
 
-    if (this->entries[entryIdx].checksum != bs.checksum())
+    // Skip past any remaining bits in the data
+    while (inBitMask != 0x80)
     {
-        free(out);
-        out = NULL;
+        DEC_READ_FLAG_BIT();
     }
 
     free(rawData);
+
+    if (this->entries[entryIdx].checksum != checksum)
+    {
+        if (out != NULL)
+        {
+            free(out);
+            out = NULL;
+        }
+        return NULL;
+    }
+
     return out;
 }
 }; // namespace th06

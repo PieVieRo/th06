@@ -16,14 +16,6 @@ DIFFABLE_STATIC_ARRAY_ASSIGN(BombData, 4, g_BombData) = {
     /* MarisaB */ {BombData::BombMarisaBCalc, BombData::BombMarisaBDraw},
 };
 
-// MSVC allocates stack space for unused inlined variables and one of Zun's inlined bomb functions has an unused
-// variable This keeps the stack where it should be for when that happens, since it isn't clear what the original
-// function was
-void inline WasteStackSpace()
-{
-    D3DXVECTOR3 waste;
-}
-
 #pragma var_order(angle, i, bombSprite, vecLength, bombPivot, bombIdx)
 void BombData::BombReimuACalc(Player *player)
 {
@@ -53,20 +45,17 @@ void BombData::BombReimuACalc(Player *player)
         g_ItemManager.RemoveAllItems();
         g_EffectManager.SpawnParticles(PARTICLE_EFFECT_UNK_12, &player->positionCenter, 1, COLOR_NEONBLUE);
 
-        player->bombProjectiles[8].pos.x = (player->positionCenter).x;
-        player->bombProjectiles[8].pos.y = (player->positionCenter).y;
+        player->bombProjectiles[8].posX = (player->positionCenter).x;
+        player->bombProjectiles[8].posY = (player->positionCenter).y;
 
-        player->bombProjectiles[8].size.x = 256.0f;
-        player->bombProjectiles[8].size.y = 256.0f;
+        player->bombProjectiles[8].sizeX = 256.0f;
+        player->bombProjectiles[8].sizeY = 256.0f;
     }
     if (player->bombInfo.timer >= 60 && player->bombInfo.timer < 180)
     {
 
         if (player->bombInfo.timer.AsFrames() % 16 == 0 && (i = (player->bombInfo.timer.AsFrames() - 60) / 16))
         {
-            WasteStackSpace();
-            WasteStackSpace();
-
             player->bombInfo.reimuABombProjectilesState[i] = 1;
             player->bombInfo.reimuABombProjectilesRelated[i] = 4.0f;
             player->bombInfo.bombRegionPositions[i] = player->positionCenter;
@@ -137,11 +126,11 @@ void BombData::BombReimuACalc(Player *player)
                 player->bombRegionPositions[i] = player->bombInfo.bombRegionPositions[i];
                 player->bombRegionDamages[i] = 8;
 
-                player->bombProjectiles[i].pos.x = player->bombInfo.bombRegionPositions[i].x;
-                player->bombProjectiles[i].pos.y = player->bombInfo.bombRegionPositions[i].y;
+                player->bombProjectiles[i].posX = player->bombInfo.bombRegionPositions[i].x;
+                player->bombProjectiles[i].posY = player->bombInfo.bombRegionPositions[i].y;
 
-                player->bombProjectiles[i].size.x = 48.0f;
-                player->bombProjectiles[i].size.y = 48.0f;
+                player->bombProjectiles[i].sizeX = 48.0f;
+                player->bombProjectiles[i].sizeY = 48.0f;
 
                 if (player->unk_838[i] >= 100 || player->bombInfo.timer >= player->bombInfo.duration - 30)
                 {
@@ -161,8 +150,8 @@ void BombData::BombReimuACalc(Player *player)
 
                     player->bombRegionDamages[i] = 200;
 
-                    player->bombProjectiles[i].size.x = 256.0f;
-                    player->bombProjectiles[i].size.y = 256.0f;
+                    player->bombProjectiles[i].sizeX = 256.0f;
+                    player->bombProjectiles[i].sizeY = 256.0f;
 
                     player->bombInfo.bombRegionVelocities[i] / 100.0f; // ZUN moment
 
@@ -231,6 +220,36 @@ void BombData::BombReimuADraw(Player *player)
     return;
 }
 
+#pragma var_order(local8, viewport, darkeningTimeLeft)
+void BombData::DarkenViewport(Player *player)
+{
+    ZunRect viewport;
+    f32 darkeningTimeLeft;
+    i32 darknessLevel; // Controls alpha level of black rectangle drawn over view
+
+    viewport.left = 32.0f;
+    viewport.top = 16.0f;
+    viewport.right = 416.0f;
+    viewport.bottom = 464.0f;
+
+    if (player->bombInfo.timer < 60)
+    {
+        darkeningTimeLeft = (player->bombInfo.timer.AsFramesFloat() * 176.0f) / 60.0f;
+        darknessLevel = darkeningTimeLeft >= 176.0f ? 176 : (i32)darkeningTimeLeft;
+    }
+    else if (player->bombInfo.timer >= player->bombInfo.duration + -60)
+    {
+        darkeningTimeLeft = ((player->bombInfo.duration - player->bombInfo.timer.AsFramesFloat()) * 176.0f) / 60.0f;
+        darknessLevel = darkeningTimeLeft < 0.0f ? 0 : (i32)darkeningTimeLeft;
+    }
+    else
+    {
+        darknessLevel = 176;
+    }
+
+    ScreenEffect::DrawSquare(&viewport, darknessLevel << 24);
+}
+
 #pragma var_order(i, bombSprite, unusedVector)
 void BombData::BombReimuBCalc(Player *player)
 {
@@ -252,9 +271,6 @@ void BombData::BombReimuBCalc(Player *player)
         player->bombInfo.duration = 140;
         player->invulnerabilityTimer.SetCurrent(200);
         bombSprite = player->bombInfo.sprites[0];
-
-        WasteStackSpace();
-        WasteStackSpace();
 
         for (i = 0; i < 4; i++, bombSprite++)
         {
@@ -283,26 +299,26 @@ void BombData::BombReimuBCalc(Player *player)
             ScreenEffect::RegisterChain(SCREEN_EFFECT_SHAKE, 80, 20, 0, 0);
         }
 
-        player->bombProjectiles[0].size.x = 62.0f;
-        player->bombProjectiles[0].size.y = 448.0f;
-        player->bombProjectiles[1].size.x = 384.0f;
-        player->bombProjectiles[1].size.y = 62.0f;
-        player->bombProjectiles[2].size.x = 62.0f;
-        player->bombProjectiles[2].size.y = 448.0f;
-        player->bombProjectiles[3].size.x = 384.0f;
-        player->bombProjectiles[3].size.y = 62.0f;
+        player->bombProjectiles[0].sizeX = 62.0f;
+        player->bombProjectiles[0].sizeY = 448.0f;
+        player->bombProjectiles[1].sizeX = 384.0f;
+        player->bombProjectiles[1].sizeY = 62.0f;
+        player->bombProjectiles[2].sizeX = 62.0f;
+        player->bombProjectiles[2].sizeY = 448.0f;
+        player->bombProjectiles[3].sizeX = 384.0f;
+        player->bombProjectiles[3].sizeY = 62.0f;
 
         for (i = 0; i < 4; i++)
         {
             g_AnmManager->ExecuteScript(&player->bombInfo.sprites[0][i]);
             if (player->bombInfo.timer.HasTicked() && player->bombInfo.timer.AsFrames() % 2 != 0)
             {
-                player->bombProjectiles[i].pos.x =
+                player->bombProjectiles[i].posX =
                     player->bombInfo.bombRegionPositions[i].x + player->bombInfo.sprites[0][i].posOffset.x;
-                player->bombProjectiles[i].pos.y =
+                player->bombProjectiles[i].posY =
                     player->bombInfo.bombRegionPositions[i].y + player->bombInfo.sprites[0][i].posOffset.y;
-                player->bombRegionSizes[i].x = player->bombProjectiles[i].size.x;
-                player->bombRegionSizes[i].y = player->bombProjectiles[i].size.y;
+                player->bombRegionSizes[i].x = player->bombProjectiles[i].sizeX;
+                player->bombRegionSizes[i].y = player->bombProjectiles[i].sizeY;
                 player->bombRegionPositions[i] =
                     player->bombInfo.bombRegionPositions[i] + player->bombInfo.sprites[0][i].posOffset;
                 player->bombRegionDamages[i] = 8;
@@ -358,9 +374,6 @@ void BombData::BombMarisaACalc(Player *player)
         starSprite = player->bombInfo.sprites[0];
         for (i = 0; i < ARRAY_SIZE_SIGNED(player->bombInfo.sprites); i++, starSprite++)
         {
-            WasteStackSpace();
-            WasteStackSpace();
-
             g_AnmManager->ExecuteAnmIdx(starSprite, ANM_SCRIPT_PLAYER_MARISA_A_BLUE_STAR + i % 3);
             player->bombInfo.bombRegionPositions[i] = player->positionCenter;
 
@@ -383,10 +396,10 @@ void BombData::BombMarisaACalc(Player *player)
 
             if (player->bombInfo.timer.HasTicked() && player->bombInfo.timer.AsFrames() % 3 != 0)
             {
-                player->bombProjectiles[i].pos.x = player->bombInfo.bombRegionPositions[i].x;
-                player->bombProjectiles[i].pos.y = player->bombInfo.bombRegionPositions[i].y;
-                player->bombProjectiles[i].size.x = 128.0f;
-                player->bombProjectiles[i].size.y = 128.0f;
+                player->bombProjectiles[i].posX = player->bombInfo.bombRegionPositions[i].x;
+                player->bombProjectiles[i].posY = player->bombInfo.bombRegionPositions[i].y;
+                player->bombProjectiles[i].sizeX = 128.0f;
+                player->bombProjectiles[i].sizeY = 128.0f;
                 player->bombRegionSizes[i].x = 128.0f;
                 player->bombRegionSizes[i].y = 128.0f;
 
@@ -480,9 +493,6 @@ void BombData::BombMarisaBCalc(Player *player)
     }
     else
     {
-        WasteStackSpace();
-        WasteStackSpace();
-
         if (player->bombInfo.timer == 60)
         {
             ScreenEffect::RegisterChain(SCREEN_EFFECT_SHAKE, 60, 1, 7, 0);
@@ -494,14 +504,14 @@ void BombData::BombMarisaBCalc(Player *player)
 
         if (player->bombInfo.timer.HasTicked() && player->bombInfo.timer.AsFrames() % 4 != 0)
         {
-            player->bombProjectiles[0].pos.x = 192.0f;
-            player->bombProjectiles[0].pos.y = player->positionCenter.y / 2.0f;
-            player->bombProjectiles[0].size.x = 384.0f;
-            player->bombProjectiles[0].size.y = player->positionCenter.y;
+            player->bombProjectiles[0].posX = 192.0f;
+            player->bombProjectiles[0].posY = player->positionCenter.y / 2.0f;
+            player->bombProjectiles[0].sizeX = 384.0f;
+            player->bombProjectiles[0].sizeY = player->positionCenter.y;
             player->bombRegionSizes[0].x = 384.0f;
             player->bombRegionSizes[0].y = player->positionCenter.y;
-            player->bombRegionPositions[0].x = player->bombProjectiles[0].pos.x;
-            player->bombRegionPositions[0].y = player->bombProjectiles[0].pos.y;
+            player->bombRegionPositions[0].x = player->bombProjectiles[0].posX;
+            player->bombRegionPositions[0].y = player->bombProjectiles[0].posY;
             player->bombRegionDamages[0] = 12;
         }
 
@@ -538,35 +548,5 @@ void BombData::BombMarisaBDraw(Player *player)
         g_AnmManager->Draw(bombSprite);
         bombSprite++;
     }
-}
-
-#pragma var_order(local8, viewport, darkeningTimeLeft)
-void BombData::DarkenViewport(Player *player)
-{
-    ZunRect viewport;
-    f32 darkeningTimeLeft;
-    i32 darknessLevel; // Controls alpha level of black rectangle drawn over view
-
-    viewport.left = 32.0f;
-    viewport.top = 16.0f;
-    viewport.right = 416.0f;
-    viewport.bottom = 464.0f;
-
-    if (player->bombInfo.timer < 60)
-    {
-        darkeningTimeLeft = (player->bombInfo.timer.AsFramesFloat() * 176.0f) / 60.0f;
-        darknessLevel = darkeningTimeLeft >= 176.0f ? 176 : (i32)darkeningTimeLeft;
-    }
-    else if (player->bombInfo.timer >= player->bombInfo.duration + -60)
-    {
-        darkeningTimeLeft = ((player->bombInfo.duration - player->bombInfo.timer.AsFramesFloat()) * 176.0f) / 60.0f;
-        darknessLevel = darkeningTimeLeft < 0.0f ? 0 : (i32)darkeningTimeLeft;
-    }
-    else
-    {
-        darknessLevel = 176;
-    }
-
-    ScreenEffect::DrawSquare(&viewport, darknessLevel << 24);
 }
 }; // namespace th06

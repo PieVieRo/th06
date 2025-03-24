@@ -30,6 +30,10 @@ DIFFABLE_STATIC_ARRAY_ASSIGN(StageFile, 8, g_StageFiles) = {
 };
 DIFFABLE_STATIC(Stage, g_Stage)
 
+Stage::Stage()
+{
+}
+
 #pragma var_order(posInterpRatio, curInsn, pos, facingDirInterpRatio, skyFogInterpRatio, idx)
 ChainCallbackResult Stage::OnUpdate(Stage *stage)
 {
@@ -682,16 +686,4 @@ ZunResult Stage::RenderObjects(i32 zLevel)
     }
     return ZUN_SUCCESS;
 }
-
-void AnmManager::ExecuteAnmIdx(AnmVm *vm, i32 anmFileIdx)
-{
-    vm->anmFileIndex = anmFileIdx;
-    vm->pos = D3DXVECTOR3(0, 0, 0);
-    vm->posOffset = D3DXVECTOR3(0, 0, 0);
-    vm->fontHeight = 15;
-    vm->fontWidth = 15;
-
-    this->SetAndExecuteScript(vm, this->scripts[anmFileIdx]);
-}
-
 }; // namespace th06
