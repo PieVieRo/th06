@@ -149,7 +149,7 @@ struct CharacterPowerBulletData
     ZunVec2 size;
     f32 direction;
     f32 velocity;
-    u16 unk_1c;
+    u16 damage;
     u8 spawnPositionIdx;
     u8 bulletType;
     i16 anmFileIdx;
@@ -250,12 +250,9 @@ struct Player
 #pragma var_order(x, y)
     void inline SetToTopLeftPos(AnmVm *sprite)
     {
-
-        f32 *x = &sprite->pos.x;
-        *x += g_GameManager.arcadeRegionTopLeftPos.x;
-        f32 *y = &sprite->pos.y;
-        *y += g_GameManager.arcadeRegionTopLeftPos.y;
-        sprite->pos.z = 0.0;
+        sprite->pos[0] += g_GameManager.arcadeRegionTopLeftPos.x;
+        sprite->pos[1] += g_GameManager.arcadeRegionTopLeftPos.y;
+        sprite->pos[2] = 0.0;
     };
 };
 ZUN_ASSERT_SIZE(Player, 0x98f0);

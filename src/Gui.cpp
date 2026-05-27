@@ -20,36 +20,27 @@ DIFFABLE_STATIC(Gui, g_Gui);
 DIFFABLE_STATIC(ChainElem, g_GuiCalcChain);
 DIFFABLE_STATIC(ChainElem, g_GuiDrawChain);
 
-#pragma optimize("s", on)
 ZunBool Gui::IsStageFinished()
 {
-    return this->impl->loadingScreenSprite.activeSpriteIndex >= 0 && this->impl->loadingScreenSprite.flags.flag13;
+    return this->impl->loadingScreenSprite.activeSpriteIndex >= 0 && this->impl->loadingScreenSprite.flags.isStopped;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void Gui::EndPlayerSpellcard()
 {
     (this->impl->bombSpellcardName).pendingInterrupt = 1;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void Gui::EndEnemySpellcard()
 {
     this->impl->enemySpellcardName.pendingInterrupt = 1;
     return;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 ZunBool Gui::IsDialogueSkippable()
 {
     return (this->impl->msg).dialogueSkippable;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void Gui::ShowBonusScore(u32 bonusScore)
 {
     this->impl->bonusScore.pos = D3DXVECTOR3(416.0f, 32.0f, 0.0f);
@@ -58,9 +49,7 @@ void Gui::ShowBonusScore(u32 bonusScore)
     this->impl->bonusScore.fmtArg = bonusScore;
     return;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void Gui::ShowFullPowerMode(i32 fmtArg)
 {
     this->impl->fullPowerMode.pos = D3DXVECTOR3(416.0f, 232.0f, 0.0f);
@@ -69,9 +58,7 @@ void Gui::ShowFullPowerMode(i32 fmtArg)
     this->impl->fullPowerMode.fmtArg = fmtArg;
     return;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void Gui::ShowSpellcardBonus(u32 spellcardScore)
 {
     this->impl->spellCardBonus.pos = D3DXVECTOR3(224.0f, 16.0f, 0.0f);
@@ -80,9 +67,7 @@ void Gui::ShowSpellcardBonus(u32 spellcardScore)
     this->impl->spellCardBonus.fmtArg = spellcardScore;
     return;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 ChainCallbackResult Gui::OnUpdate(Gui *gui)
 {
     if (g_GameManager.isTimeStopped)
@@ -93,9 +78,7 @@ ChainCallbackResult Gui::OnUpdate(Gui *gui)
     gui->impl->RunMsg();
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 ChainCallbackResult Gui::OnDraw(Gui *gui)
 {
     char spellCardBonusStr[32];
@@ -232,36 +215,29 @@ ChainCallbackResult Gui::OnDraw(Gui *gui)
     g_Supervisor.d3dDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void Gui::ShowBombNamePortrait(u32 sprite, char *bombName)
 {
     g_AnmManager->SetAndExecuteScriptIdx(&this->impl->playerSpellcardPortrait, 0x4a1);
     g_AnmManager->SetActiveSprite(&this->impl->playerSpellcardPortrait, sprite);
     g_AnmManager->SetAndExecuteScriptIdx(&this->impl->bombSpellcardName, 0x706);
-    g_AnmManager->DrawVmTextFmt(g_AnmManager, &this->impl->bombSpellcardName, 0xf0f0ff, 0x0, bombName);
+    g_AnmManager->DrawVmTextFmt(&this->impl->bombSpellcardName, 0xf0f0ff, 0x0, bombName);
     this->bombSpellcardBarLength = strlen(bombName) * 0xf / 2.0f + 16;
     g_Supervisor.unk198 = 3;
     g_SoundPlayer.PlaySoundByIdx(SOUND_BOMB, 0);
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void Gui::ShowSpellcard(i32 spellcardSprite, char *spellcardName)
 {
     g_AnmManager->SetAndExecuteScriptIdx(&this->impl->enemySpellcardPortrait, ANM_SCRIPT_FACE_ENEMY_SPELLCARD_PORTRAIT);
     g_AnmManager->SetActiveSprite(&this->impl->enemySpellcardPortrait, ANM_SPRITE_FACE_STAGE_START + spellcardSprite);
     g_AnmManager->SetAndExecuteScriptIdx(&this->impl->enemySpellcardName, ANM_SCRIPT_TEXT_ENEMY_SPELLCARD_NAME);
-    AnmManager::DrawStringFormat(g_AnmManager, &this->impl->enemySpellcardName, 0xfff0f0, COLOR_RGB(COLOR_BLACK),
-                                 spellcardName);
+    g_AnmManager->DrawStringFormat(&this->impl->enemySpellcardName, 0xfff0f0, COLOR_RGB(COLOR_BLACK), spellcardName);
     this->blueSpellcardBarLength = strlen(spellcardName) * 15 / 2.0f + 16.0f;
     g_SoundPlayer.PlaySoundByIdx(SOUND_BOMB, 0);
     return;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 ZunResult Gui::ActualAddedCallback()
 {
     i32 idx;
@@ -458,12 +434,12 @@ ZunResult Gui::ActualAddedCallback()
     this->impl->enemySpellcardName.fontHeight = 15;
     g_AnmManager->SetAndExecuteScriptIdx(&this->impl->stageNameSprite, ANM_SCRIPT_TEXT_STAGE_NAME);
     g_AnmManager->SetAndExecuteScriptIdx(&this->impl->songNameSprite, ANM_SCRIPT_TEXT_SONG_NAME);
-    AnmManager::DrawStringFormat2(g_AnmManager, &this->impl->stageNameSprite, COLOR_RGB(COLOR_LIGHTCYAN),
-                                  COLOR_RGB(COLOR_BLACK), g_Stage.stdData->stageName);
+    g_AnmManager->DrawStringFormat2(&this->impl->stageNameSprite, COLOR_RGB(COLOR_LIGHTCYAN), COLOR_RGB(COLOR_BLACK),
+                                    g_Stage.stdData->stageName);
     this->impl->songNameSprite.fontWidth = 16;
     this->impl->songNameSprite.fontHeight = 16;
-    AnmManager::DrawStringFormat(g_AnmManager, &this->impl->songNameSprite, COLOR_RGB(COLOR_LIGHTCYAN),
-                                 COLOR_RGB(COLOR_BLACK), TH_SONG_NAME, g_Stage.stdData->songNames[0]);
+    g_AnmManager->DrawStringFormat(&this->impl->songNameSprite, COLOR_RGB(COLOR_LIGHTCYAN), COLOR_RGB(COLOR_BLACK),
+                                   TH_SONG_NAME, g_Stage.stdData->songNames[0]);
     this->impl->msg.currentMsgIdx = 0xffffffff;
     this->impl->finishedStage = 0;
     this->impl->bonusScore.isShown = 0;
@@ -476,9 +452,7 @@ ZunResult Gui::ActualAddedCallback()
     this->flags.flag2 = 2;
     return ZUN_SUCCESS;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 ZunResult Gui::LoadMsg(char *path)
 {
     i32 idx;
@@ -487,7 +461,7 @@ ZunResult Gui::LoadMsg(char *path)
     this->impl->msg.msgFile = (MsgRawHeader *)FileSystem::OpenPath(path, 0);
     if (this->impl->msg.msgFile == NULL)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GUI_MSG_FILE_CORRUPTED, path);
+        g_GameErrorContext.Log(TH_ERR_GUI_MSG_FILE_CORRUPTED, path);
         return ZUN_ERROR;
     }
     this->impl->msg.currentMsgIdx = 0xffffffff;
@@ -499,9 +473,7 @@ ZunResult Gui::LoadMsg(char *path)
     }
     return ZUN_SUCCESS;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void Gui::FreeMsgFile()
 {
     MsgRawHeader *msg;
@@ -512,18 +484,14 @@ void Gui::FreeMsgFile()
         (this->impl->msg).msgFile = NULL;
     }
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void Gui::MsgRead(i32 msgIdx)
 {
     this->impl->MsgRead(msgIdx);
     g_Supervisor.unk198 = 3;
     return;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 void GuiImpl::MsgRead(i32 msgIdx)
 {
     MsgRawHeader *msgFile;
@@ -556,9 +524,7 @@ void GuiImpl::MsgRead(i32 msgIdx)
     }
     return;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 ZunResult GuiImpl::RunMsg()
 {
     MsgRawInstrArgs *args;
@@ -600,17 +566,16 @@ ZunResult GuiImpl::RunMsg()
             args = &this->msg.currentInstr->args;
             if (args->text.textLine == 0 && 0 <= this->msg.dialogueLines[1].anmFileIndex)
             {
-                AnmManager::DrawVmTextFmt(g_AnmManager, &this->msg.dialogueLines[1],
-                                          this->msg.textColorsA[args->text.textColor],
-                                          this->msg.textColorsB[args->text.textColor], " ");
+                g_AnmManager->DrawVmTextFmt(&this->msg.dialogueLines[1], this->msg.textColorsA[args->text.textColor],
+                                            this->msg.textColorsB[args->text.textColor], " ");
             }
             g_AnmManager->SetAndExecuteScriptIdx(&this->msg.dialogueLines[args->text.textLine],
                                                  0x702 + args->text.textLine);
             this->msg.dialogueLines[args->text.textLine].fontWidth =
                 this->msg.dialogueLines[args->text.textLine].fontHeight = this->msg.fontSize;
-            AnmManager::DrawVmTextFmt(g_AnmManager, &this->msg.dialogueLines[args->text.textLine],
-                                      this->msg.textColorsA[args->text.textColor],
-                                      this->msg.textColorsB[args->text.textColor], args->text.text);
+            g_AnmManager->DrawVmTextFmt(&this->msg.dialogueLines[args->text.textLine],
+                                        this->msg.textColorsA[args->text.textColor],
+                                        this->msg.textColorsB[args->text.textColor], args->text.text);
             this->msg.framesElapsedDuringPause = 0;
             break;
         case MSG_OPCODE_WAIT:
@@ -645,9 +610,8 @@ ZunResult GuiImpl::RunMsg()
             g_AnmManager->SetAndExecuteScriptIdx(&this->songNameSprite, 0x701);
             this->songNameSprite.fontWidth = 16;
             this->songNameSprite.fontHeight = 16;
-            AnmManager::DrawStringFormat(g_AnmManager, &this->songNameSprite, COLOR_RGB(COLOR_LIGHTCYAN),
-                                         COLOR_RGB(COLOR_BLACK), "♪%s",
-                                         g_Stage.stdData->songNames[this->msg.currentInstr->args.music]);
+            g_AnmManager->DrawStringFormat(&this->songNameSprite, COLOR_RGB(COLOR_LIGHTCYAN), COLOR_RGB(COLOR_BLACK),
+                                           "♪%s", g_Stage.stdData->songNames[this->msg.currentInstr->args.music]);
             if (g_Supervisor.PlayMidiFile(this->msg.currentInstr->args.music) != 0)
             {
                 g_Supervisor.PlayAudio(g_Stage.stdData->songPaths[this->msg.currentInstr->args.music]);
@@ -657,9 +621,9 @@ ZunResult GuiImpl::RunMsg()
             args = &this->msg.currentInstr->args;
             g_AnmManager->SetAndExecuteScriptIdx(&this->msg.introLines[args->text.textLine],
                                                  args->text.textLine + 0x704);
-            AnmManager::DrawStringFormat(g_AnmManager, &this->msg.introLines[args->text.textLine],
-                                         this->msg.textColorsA[args->text.textColor],
-                                         this->msg.textColorsB[args->text.textColor], args->text.text);
+            g_AnmManager->DrawStringFormat(&this->msg.introLines[args->text.textLine],
+                                           this->msg.textColorsA[args->text.textColor],
+                                           this->msg.textColorsB[args->text.textColor], args->text.text);
             this->msg.framesElapsedDuringPause = 0;
             break;
         case MSG_OPCODE_STAGERESULTS:
@@ -731,10 +695,8 @@ SKIP_TIME_INCREMENT:
     }
     return ZUN_SUCCESS;
 }
-#pragma optimize("", on)
 
 #pragma var_order(dialogueBoxHeight, vertices)
-#pragma optimize("s", on)
 ZunResult GuiImpl::DrawDialogue()
 {
     f32 dialogueBoxHeight;
@@ -819,9 +781,7 @@ ZunResult GuiImpl::DrawDialogue()
     g_AnmManager->DrawNoRotation(&this->msg.introLines[1]);
     return ZUN_SUCCESS;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 BOOL Gui::MsgWait()
 {
     if (this->impl->msg.ignoreWaitCounter > 0)
@@ -830,16 +790,12 @@ BOOL Gui::MsgWait()
     }
     return 0 <= this->impl->msg.currentMsgIdx;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 BOOL Gui::HasCurrentMsgIdx()
 {
     return 0 <= this->impl->msg.currentMsgIdx;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 #pragma var_order(idx, stageScore)
 void Gui::UpdateStageElements()
 {
@@ -1022,7 +978,6 @@ void Gui::UpdateStageElements()
     }
     return;
 }
-#pragma optimize("", on)
 
 static ZunColor COLOR1 = 0xa0d0ff;
 static ZunColor COLOR2 = 0xa080ff;
@@ -1030,7 +985,6 @@ static ZunColor COLOR3 = 0xe080c0;
 static ZunColor COLOR4 = 0xff4040;
 
 #pragma var_order(yPos, xPos, idx, vm)
-#pragma optimize("s", on)
 void Gui::DrawGameScene()
 {
     AnmVm *vm;
@@ -1285,9 +1239,7 @@ void Gui::DrawGameScene()
     }
     return;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 #pragma var_order(stageTextPos, stageTextColor, demoTextColor)
 void Gui::DrawStageElements()
 {
@@ -1380,7 +1332,6 @@ void Gui::DrawStageElements()
         g_AnmManager->DrawNoRotation(&this->impl->loadingScreenSprite);
     }
 }
-#pragma optimize("", on)
 
 #pragma optimize("s", on)
 ZunResult Gui::AddedCallback(Gui *gui)
@@ -1389,7 +1340,6 @@ ZunResult Gui::AddedCallback(Gui *gui)
 }
 #pragma optimize("", on)
 
-#pragma optimize("s", on)
 ZunResult Gui::DeletedCallback(Gui *gui)
 {
     g_AnmManager->ReleaseAnm(ANM_FILE_FACE_STAGE_A);
@@ -1408,9 +1358,7 @@ ZunResult Gui::DeletedCallback(Gui *gui)
     }
     return ZUN_SUCCESS;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 ZunResult Gui::RegisterChain()
 {
     Gui *gui = &g_Gui;
@@ -1436,13 +1384,10 @@ ZunResult Gui::RegisterChain()
     g_Chain.AddToDrawChain(&g_GuiDrawChain, TH_CHAIN_PRIO_DRAW_GUI);
     return ZUN_SUCCESS;
 }
-#pragma optimize("", on)
 
-#pragma optimize("s", on)
 GuiImpl::GuiImpl() {
 
 };
-#pragma optimize("", on)
 
 #pragma optimize("s", on)
 void Gui::CutChain()

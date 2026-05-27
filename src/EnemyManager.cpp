@@ -28,6 +28,7 @@ DIFFABLE_STATIC_ARRAY_ASSIGN(u8, 32, g_RandomItems) = {
     ITEM_POINT,       ITEM_POWER_SMALL, ITEM_POWER_SMALL, ITEM_POINT,       ITEM_POINT,       ITEM_POINT,
     ITEM_POWER_SMALL, ITEM_POWER_BIG};
 
+#pragma var_order(i, enemy)
 void EnemyManager::Initialize()
 {
     i32 i;
@@ -584,8 +585,7 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *mgr)
             enemyLifeBeforeDmg = curEnemy->life;
             if (curEnemy->flags.unk7 && curEnemy->flags.unk6)
             {
-                // There's something weird going on here, stack-wise.
-                enemyHitbox = curEnemy->HitboxDimensions(1.5f);
+                enemyHitbox = curEnemy->hitboxDimensions / 1.5;
                 if (g_Player.CalcKillBoxCollision(&curEnemy->position, &enemyHitbox) == 1 && curEnemy->flags.unk6 &&
                     !curEnemy->flags.isBoss)
                 {

@@ -89,9 +89,18 @@ ZUN_ASSERT_SIZE(RenderVertexInfo, 0x14);
 struct AnmManager
 {
     AnmManager();
-    ~AnmManager();
+    ~AnmManager()
+    {
+    }
 
-    void ReleaseVertexBuffer();
+    void ReleaseVertexBuffer()
+    {
+        if (this->vertexBuffer != NULL)
+        {
+            this->vertexBuffer->Release();
+            this->vertexBuffer = NULL;
+        }
+    }
     void SetupVertexBuffer();
 
     ZunResult CreateEmptyTexture(i32 textureIdx, u32 width, u32 height, i32 textureFormat);
@@ -143,9 +152,9 @@ struct AnmManager
     ZunResult Draw(AnmVm *vm);
     void DrawTextToSprite(u32 spriteDstIndex, i32 xPos, i32 yPos, i32 spriteWidth, i32 spriteHeight, i32 fontWidth,
                           i32 fontHeight, ZunColor textColor, ZunColor shadowColor, char *strToPrint);
-    static void DrawStringFormat(AnmManager *mgr, AnmVm *vm, ZunColor textColor, ZunColor shadowColor, char *fmt, ...);
-    static void DrawStringFormat2(AnmManager *mgr, AnmVm *vm, ZunColor textColor, ZunColor shadowColor, char *fmt, ...);
-    static void DrawVmTextFmt(AnmManager *anm_mgr, AnmVm *vm, ZunColor textColor, ZunColor shadowColor, char *fmt, ...);
+    void DrawStringFormat(AnmVm *vm, ZunColor textColor, ZunColor shadowColor, char *fmt, ...);
+    void DrawStringFormat2(AnmVm *vm, ZunColor textColor, ZunColor shadowColor, char *fmt, ...);
+    void DrawVmTextFmt(AnmVm *vm, ZunColor textColor, ZunColor shadowColor, char *fmt, ...);
     ZunResult DrawNoRotation(AnmVm *vm);
     ZunResult DrawInner(AnmVm *vm, i32 unk);
     ZunResult DrawFacingCamera(AnmVm *vm);

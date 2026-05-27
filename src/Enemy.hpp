@@ -63,9 +63,9 @@ struct EnemyLaserShooter
     f32 width;
     i32 startTime;
     i32 duration;
-    i32 stopTime;
-    i32 grazeDelay;
-    i32 grazeDistance;
+    i32 despawnDuration;
+    i32 hitboxStartTime;
+    i32 hitboxEndDelay;
     u32 unk_44;
     u16 type;
     u32 flags;
@@ -148,11 +148,6 @@ struct Enemy
     f32 LifePercent()
     {
         return (f32)this->life / (f32)this->maxLife;
-    }
-
-    D3DXVECTOR3 HitboxDimensions(f32 shrinkFactor)
-    {
-        return (1.0f / shrinkFactor) * this->hitboxDimensions;
     }
 
     ZunBool HasBossTimerFinished()

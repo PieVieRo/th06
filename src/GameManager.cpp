@@ -83,7 +83,6 @@ DIFFABLE_STATIC(ChainElem, g_GameManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_GameManagerDrawChain);
 
 #define MAX_SCORE 999999999
-#define MAX_CLEARS 99
 
 #define DEMO_FADEOUT_FRAMES 3600
 #define DEMO_FRAMES 3720
@@ -92,7 +91,6 @@ DIFFABLE_STATIC(ChainElem, g_GameManagerDrawChain);
 
 #define MAX_LIVES 8
 
-#pragma optimize("s", on)
 i32 GameManager::IsInBounds(f32 x, f32 y, f32 width, f32 height)
 {
     if (width / 2.0f + x < 0.0f)
@@ -406,39 +404,39 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
     mgr->randomSeed = g_Rng.seed;
     if (Stage::RegisterChain(mgr->currentStage) != ZUN_SUCCESS)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_STAGE);
+        g_GameErrorContext.Log(TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_STAGE);
         return ZUN_ERROR;
     }
 
     if (Player::RegisterChain(0) != ZUN_SUCCESS)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_PLAYER);
+        g_GameErrorContext.Log(TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_PLAYER);
         return ZUN_ERROR;
     }
     if (BulletManager::RegisterChain("data/etama.anm") != ZUN_SUCCESS)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_BULLETMANAGER);
+        g_GameErrorContext.Log(TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_BULLETMANAGER);
         return ZUN_ERROR;
     }
     if (EnemyManager::RegisterChain(g_AnmStageFiles[mgr->currentStage].file1,
                                     g_AnmStageFiles[mgr->currentStage].file2) != ZUN_SUCCESS)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_ENEMYMANAGER);
+        g_GameErrorContext.Log(TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_ENEMYMANAGER);
         return ZUN_ERROR;
     }
     if (g_EclManager.Load(g_EclFiles[mgr->currentStage]) != ZUN_SUCCESS)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_ECLMANAGER);
+        g_GameErrorContext.Log(TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_ECLMANAGER);
         return ZUN_ERROR;
     }
     if (EffectManager::RegisterChain() != ZUN_SUCCESS)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_EFFECTMANAGER);
+        g_GameErrorContext.Log(TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_EFFECTMANAGER);
         return ZUN_ERROR;
     }
     if (Gui::RegisterChain() != ZUN_SUCCESS)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_GUI);
+        g_GameErrorContext.Log(TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_GUI);
         return ZUN_ERROR;
     }
     if (g_GameManager.isInReplay == 0)
@@ -615,12 +613,4 @@ GameManager::GameManager()
     (this->arcadeRegionSize).x = GAME_REGION_WIDTH;
     (this->arcadeRegionSize).y = GAME_REGION_HEIGHT;
 }
-
-i32 GameManager::HasReachedMaxClears(i32 character, i32 shottype)
-{
-    return (this->clrd[shottype + character * 2].difficultyClearedWithRetries[1] == MAX_CLEARS ||
-            this->clrd[shottype + character * 2].difficultyClearedWithRetries[2] == MAX_CLEARS ||
-            this->clrd[shottype + character * 2].difficultyClearedWithRetries[3] == MAX_CLEARS);
-}
-#pragma optimize("", on)
 }; // namespace th06

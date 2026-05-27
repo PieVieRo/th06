@@ -9,6 +9,7 @@
 #include "ScreenEffect.hpp"
 #include "Supervisor.hpp"
 #include "ZunColor.hpp"
+#include "ZunMemory.hpp"
 #include "utils.hpp"
 #include <d3d8.h>
 
@@ -395,15 +396,13 @@ void Stage::CutChain()
     g_Chain.Cut(&g_StageOnDrawLowPrioChain);
 }
 
-#pragma var_order(vmIdx, idx, curObj, curQuad, sizeVmArr, padding1, padding2, padding3, padding4, padding5, padding6)
+#pragma var_order(vmIdx, idx, curObj, curQuad)
 ZunResult Stage::LoadStageData(char *anmpath, char *stdpath)
 {
     RawStageObject *curObj;
     RawStageQuadBasic *curQuad;
     i32 idx;
     i32 vmIdx;
-    u32 sizeVmArr;
-    u32 padding1, padding2, padding3, padding4, padding5, padding6;
 
     if (g_AnmManager->LoadAnm(ANM_FILE_STAGEBG, anmpath, ANM_OFFSET_STAGEBG) != ZUN_SUCCESS)
     {
@@ -412,7 +411,7 @@ ZunResult Stage::LoadStageData(char *anmpath, char *stdpath)
     this->stdData = (RawStageHeader *)FileSystem::OpenPath(stdpath, false);
     if (this->stdData == NULL)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_STAGE_DATA_CORRUPTED);
+        g_GameErrorContext.Log(TH_ERR_STAGE_DATA_CORRUPTED);
         return ZUN_ERROR;
     }
     this->objectsCount = this->stdData->nbObjects;
@@ -424,8 +423,7 @@ ZunResult Stage::LoadStageData(char *anmpath, char *stdpath)
     {
         this->objects[idx] = (RawStageObject *)((i32)this->objects[idx] + (i32)this->stdData);
     }
-    sizeVmArr = this->quadCount * sizeof(AnmVm);
-    this->quadVms = (AnmVm *)malloc(sizeVmArr);
+    this->quadVms = (AnmVm *)ZunAlloc(this->quadCount * sizeof(AnmVm));
     for (idx = 0, vmIdx = 0; idx < this->objectsCount; idx++)
     {
         curObj = this->objects[idx];

@@ -41,7 +41,7 @@ ZunResult EclManager::Load(char *eclPath)
     this->eclFile = (EclRawHeader *)FileSystem::OpenPath(eclPath, false);
     if (this->eclFile == NULL)
     {
-        GameErrorContext::Log(&g_GameErrorContext, TH_ERR_ECLMANAGER_ENEMY_DATA_CORRUPT);
+        g_GameErrorContext.Log(TH_ERR_ECLMANAGER_ENEMY_DATA_CORRUPT);
         return ZUN_ERROR;
     }
     this->eclFile->timelineOffsets[0] =
@@ -461,9 +461,9 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
                 local_60->width = local_64->width;
                 local_60->startTime = local_64->startTime;
                 local_60->duration = local_64->duration;
-                local_60->stopTime = local_64->stopTime;
-                local_60->grazeDelay = local_64->grazeDelay;
-                local_60->grazeDistance = local_64->grazeDistance;
+                local_60->despawnDuration = local_64->despawnDuration;
+                local_60->hitboxStartTime = local_64->hitboxStartTime;
+                local_60->hitboxEndDelay = local_64->hitboxEndDelay;
                 local_60->flags = local_64->flags;
                 if (instruction->opCode == ECL_OPCODE_LASERCREATEAIMED)
                 {
@@ -804,8 +804,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
                 {
                     local_98 = enemy->position;
 
-                    g_Rng.GetRandomF32InBounds(&local_98.x, -72.0f, 72.0f);
-                    g_Rng.GetRandomF32InBounds(&local_98.y, -72.0f, 72.0f);
+                    local_98[0] += g_Rng.GetRandomF32InRange(144.0f) - 72.0f;
+                    local_98[1] += g_Rng.GetRandomF32InRange(144.0f) - 72.0f;
                     if (g_GameManager.currentPower < 128)
                     {
                         g_ItemManager.SpawnItem(&local_98, local_8c == 0 ? ITEM_POWER_BIG : ITEM_POWER_SMALL, 0);
