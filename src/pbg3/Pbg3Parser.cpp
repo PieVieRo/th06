@@ -7,6 +7,11 @@ Pbg3Parser::Pbg3Parser() : IPbg3Parser(), FileAbstraction()
 {
 }
 
+Pbg3Parser::~Pbg3Parser()
+{
+    this->Close();
+}
+
 i32 Pbg3Parser::OpenArchive(char *path)
 {
     this->Close();
@@ -155,10 +160,5 @@ i32 Pbg3Parser::GetLastWriteTime(LPFILETIME lastWriteTime)
 
     // EWWWW abstraction violation much? (Maybe this is an inlined function?)
     return FileAbstraction::GetLastWriteTime(lastWriteTime);
-}
-
-Pbg3Parser::~Pbg3Parser()
-{
-    this->Close();
 }
 }; // namespace th06
