@@ -475,13 +475,7 @@ ZunResult Gui::LoadMsg(char *path)
 
 void Gui::FreeMsgFile()
 {
-    MsgRawHeader *msg;
-    if ((this->impl->msg).msgFile != NULL)
-    {
-        msg = (this->impl->msg).msgFile;
-        free(msg);
-        (this->impl->msg).msgFile = NULL;
-    }
+    ZUN_SAFE_FREE((this->impl->msg).msgFile);
 }
 
 void Gui::MsgRead(i32 msgIdx)
@@ -1352,8 +1346,7 @@ ZunResult Gui::DeletedCallback(Gui *gui)
         g_AnmManager->ReleaseAnm(ANM_FILE_FACE_CHARA_A);
         g_AnmManager->ReleaseAnm(ANM_FILE_FACE_CHARA_B);
         g_AnmManager->ReleaseAnm(ANM_FILE_FACE_CHARA_C);
-        delete gui->impl;
-        gui->impl = NULL;
+        ZUN_DELETE(gui->impl);
     }
     return ZUN_SUCCESS;
 }
@@ -1364,7 +1357,7 @@ ZunResult Gui::RegisterChain()
     if ((i32)(g_Supervisor.curState != SUPERVISOR_STATE_GAMEMANAGER_REINIT))
     {
         memset(gui, 0, sizeof(Gui));
-        gui->impl = new GuiImpl();
+        gui->impl = ZUN_NEW(GuiImpl);
     }
     g_GuiCalcChain.callback = (ChainCallback)Gui::OnUpdate;
     g_GuiCalcChain.addedCallback = NULL;

@@ -9,7 +9,6 @@
 #include "ScreenEffect.hpp"
 #include "Supervisor.hpp"
 #include "ZunColor.hpp"
-#include "ZunMemory.hpp"
 #include <d3d8.h>
 
 namespace th06
@@ -372,18 +371,8 @@ ZunResult Stage::RegisterChain(u32 stage)
 ZunResult Stage::DeletedCallback(Stage *s)
 {
     g_AnmManager->ReleaseAnm(ANM_FILE_STAGEBG);
-    if (s->quadVms != NULL)
-    {
-        void *quadVms = s->quadVms;
-        free(quadVms);
-        s->quadVms = NULL;
-    }
-    if (s->stdData != NULL)
-    {
-        void *stdData = s->stdData;
-        free(stdData);
-        s->stdData = NULL;
-    }
+    ZUN_SAFE_FREE(s->quadVms);
+    ZUN_SAFE_FREE(s->stdData);
     return ZUN_SUCCESS;
 }
 
@@ -421,7 +410,7 @@ ZunResult Stage::LoadStageData(char *anmpath, char *stdpath)
     {
         this->objects[idx] = (RawStageObject *)((i32)this->objects[idx] + (i32)this->stdData);
     }
-    this->quadVms = (AnmVm *)ZunAlloc(this->quadCount * sizeof(AnmVm));
+    this->quadVms = ZUN_ALLOC_ARRAY(AnmVm, this->quadCount);
     for (idx = 0, vmIdx = 0; idx < this->objectsCount; idx++)
     {
         curObj = this->objects[idx];

@@ -134,15 +134,20 @@ struct Supervisor
         return this->effectiveFramerateMultiplier;
     }
 
-    u32 IsUnknown()
+    ZunBool IsUnknown()
     {
         return this->cfg.opts >> GCOS_CLEAR_BACKBUFFER_ON_REFRESH & 1 |
                this->cfg.opts >> GCOS_DISPLAY_MINIMUM_GRAPHICS & 1;
     }
 
-    u32 ShouldRunAt60Fps()
+    ZunBool ShouldRunAt60Fps()
     {
         return (this->cfg.opts >> GCOS_FORCE_60FPS & 1) && this->vsyncEnabled;
+    }
+
+    ZunBool IsWindowed()
+    {
+        return this->cfg.windowed;
     }
 
     HINSTANCE hInstance;

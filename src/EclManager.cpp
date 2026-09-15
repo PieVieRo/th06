@@ -61,12 +61,9 @@ ZunResult EclManager::Load(char *eclPath)
 
 void EclManager::Unload()
 {
-    EclRawHeader *file;
-
     if (this->eclFile != NULL)
     {
-        file = this->eclFile;
-        free(file);
+        ZUN_FREE(this->eclFile);
     }
     this->eclFile = NULL;
     return;

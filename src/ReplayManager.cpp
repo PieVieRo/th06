@@ -7,7 +7,6 @@
 #include "Gui.hpp"
 #include "ReplayManager.hpp"
 #include "Supervisor.hpp"
-#include "ZunMemory.hpp"
 
 namespace th06
 {
@@ -78,7 +77,7 @@ ZunResult ReplayManager::RegisterChain(i32 isDemo, char *replayFile)
     g_Supervisor.framerateMultiplier = 1.0f;
     if (g_ReplayManager == NULL)
     {
-        replayMgr = new ReplayManager();
+        replayMgr = ZUN_NEW(ReplayManager);
         g_ReplayManager = replayMgr;
         replayMgr->replayData = NULL;
         replayMgr->isDemo = isDemo;
@@ -217,7 +216,7 @@ ZunResult ReplayManager::AddedCallback(ReplayManager *mgr)
     mgr->frameId = 0;
     if (mgr->replayData == NULL)
     {
-        mgr->replayData = new ReplayData();
+        mgr->replayData = ZUN_NEW(ReplayData); // BUG: allocated with new, cleaned up with free
         memcpy(&mgr->replayData->magic[0], "T6RP", 4);
         mgr->replayData->shottypeChara = g_GameManager.character * 2 + g_GameManager.shotType;
         mgr->replayData->version = 0x102;
@@ -241,8 +240,7 @@ ZunResult ReplayManager::AddedCallback(ReplayManager *mgr)
     {
         utils::DebugPrint2("error : replay.cpp");
     }
-    mgr->replayData->stageReplayData[g_GameManager.currentStage - 1] =
-        (StageReplayData *)ZunAlloc(sizeof(StageReplayData));
+    mgr->replayData->stageReplayData[g_GameManager.currentStage - 1] = ZUN_ALLOC_TYPE(StageReplayData);
     stageReplayData = mgr->replayData->stageReplayData[g_GameManager.currentStage - 1];
     stageReplayData->bombsRemaining = g_GameManager.bombsRemaining;
     stageReplayData->livesRemaining = g_GameManager.livesRemaining;
@@ -313,9 +311,8 @@ ZunResult ReplayManager::DeletedCallback(ReplayManager *mgr)
         g_Chain.Cut(mgr->calcChainDemoHighPrio);
         mgr->calcChainDemoHighPrio = NULL;
     }
-    ZunFree(g_ReplayManager->replayData);
-    delete g_ReplayManager;
-    g_ReplayManager = NULL;
+    ZUN_FREE(g_ReplayManager->replayData);
+    ZUN_DELETE(g_ReplayManager);
     g_ReplayManager = NULL;
     return ZUN_SUCCESS;
 }
@@ -462,7 +459,7 @@ void ReplayManager::SaveReplay(char *replayPath, char *replayName)
                 {
                     utils::DebugPrint2("Replay Size %d\n", (i32)mgr->replayInputStageBookmarks[stageIdx] -
                                                                (i32)mgr->replayData->stageReplayData[stageIdx]);
-                    ZunFree(g_ReplayManager->replayData->stageReplayData[stageIdx]);
+                    ZUN_FREE(g_ReplayManager->replayData->stageReplayData[stageIdx]);
                 }
             }
         }

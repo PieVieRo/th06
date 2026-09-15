@@ -93,11 +93,7 @@ struct AnmManager
 
     void ReleaseVertexBuffer()
     {
-        if (this->vertexBuffer != NULL)
-        {
-            this->vertexBuffer->Release();
-            this->vertexBuffer = NULL;
-        }
+        SAFE_RELEASE(this->vertexBuffer);
     }
     void SetupVertexBuffer();
 

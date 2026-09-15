@@ -31,11 +31,7 @@ void AnmManager::ReleaseSurfaces(void)
 {
     for (i32 idx = 0; idx < ARRAY_SIZE_SIGNED(this->surfaces); idx++)
     {
-        if (this->surfaces[idx] != NULL)
-        {
-            this->surfaces[idx]->Release();
-            this->surfaces[idx] = NULL;
-        }
+        SAFE_RELEASE(this->surfaces[idx]);
     }
 }
 
@@ -307,23 +303,15 @@ ZunResult AnmManager::LoadTextureAlphaChannel(i32 textureIdx, char *textureName,
     textureSrc->UnlockRect(0);
     this->textures[textureIdx]->UnlockRect(0);
 
-    if (textureSrc != NULL)
-    {
-        textureSrc->Release();
-        textureSrc = NULL;
-    }
+    SAFE_RELEASE(textureSrc);
 
-    free(data);
+    ZUN_FREE(data);
     return ZUN_SUCCESS;
 
 err:
-    if (textureSrc != NULL)
-    {
-        textureSrc->Release();
-        textureSrc = NULL;
-    }
+    SAFE_RELEASE(textureSrc);
 
-    free(data);
+    ZUN_FREE(data);
     return ZUN_ERROR;
 }
 
@@ -406,7 +394,7 @@ ZunResult AnmManager::LoadAnm(i32 anmIdx, char *path, i32 spriteIdxOffset)
     return ZUN_SUCCESS;
 }
 
-#pragma var_order(entry, spriteIdx, spriteIdxOffset, i, byteOffset, anmFilePtr, anmIdx, )
+#pragma var_order(entry, spriteIdx, spriteIdxOffset, i, byteOffset)
 void AnmManager::ReleaseAnm(i32 anmIdx)
 {
     if (this->anmFiles[anmIdx] != NULL)
@@ -431,9 +419,8 @@ void AnmManager::ReleaseAnm(i32 anmIdx)
         this->anmFilesSpriteIndexOffsets[anmIdx] = 0;
         AnmRawEntry *entry = this->anmFiles[anmIdx];
         this->ReleaseTexture(entry->textureIdx);
-        AnmRawEntry *anmFilePtr = this->anmFiles[anmIdx];
-        free(anmFilePtr);
-        this->anmFiles[anmIdx] = 0;
+        ZUN_FREE(this->anmFiles[anmIdx]);
+        this->anmFiles[anmIdx] = NULL;
         this->currentBlendMode = 0xff;
         this->currentColorOp = 0xff;
         this->currentVertexShader = 0xff;
@@ -443,15 +430,9 @@ void AnmManager::ReleaseAnm(i32 anmIdx)
 
 void AnmManager::ReleaseTexture(i32 textureIdx)
 {
-    if (this->textures[textureIdx] != NULL)
-    {
-        this->textures[textureIdx]->Release();
-        this->textures[textureIdx] = NULL;
-    }
+    SAFE_RELEASE(this->textures[textureIdx]);
 
-    void *imageDataArray = this->imageDataArray[textureIdx];
-    free(imageDataArray);
-
+    ZUN_FREE(this->imageDataArray[textureIdx]);
     this->imageDataArray[textureIdx] = NULL;
 }
 
@@ -1505,36 +1486,20 @@ ZunResult AnmManager::LoadSurface(i32 surfaceIdx, char *path)
         goto fail;
     }
 
-    if (surface != NULL)
-    {
-        surface->Release();
-        surface = NULL;
-    }
-    free(data);
+    SAFE_RELEASE(surface);
+    ZUN_FREE(data);
     return ZUN_SUCCESS;
 
 fail:
-    if (surface != NULL)
-    {
-        surface->Release();
-        surface = NULL;
-    }
-    free(data);
+    SAFE_RELEASE(surface);
+    ZUN_FREE(data);
     return ZUN_ERROR;
 }
 
 void AnmManager::ReleaseSurface(i32 surfaceIdx)
 {
-    if (this->surfaces[surfaceIdx] != NULL)
-    {
-        this->surfaces[surfaceIdx]->Release();
-        this->surfaces[surfaceIdx] = NULL;
-    }
-    if (this->surfacesBis[surfaceIdx] != NULL)
-    {
-        this->surfacesBis[surfaceIdx]->Release();
-        this->surfacesBis[surfaceIdx] = NULL;
-    }
+    SAFE_RELEASE(this->surfaces[surfaceIdx]);
+    SAFE_RELEASE(this->surfacesBis[surfaceIdx]);
 }
 
 void AnmManager::CopySurfaceToBackBuffer(i32 surfaceIdx, i32 left, i32 top, i32 x, i32 y)

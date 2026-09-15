@@ -151,8 +151,7 @@ struct ResultScreen
     ResultScreen();
     ~ResultScreen()
     {
-        ScoreDat *sd = this->scoreDat;
-        free(sd);
+        ZUN_FREE(this->scoreDat);
     };
 
     static ZunResult RegisterChain(i32 unk);

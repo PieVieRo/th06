@@ -389,11 +389,7 @@ i32 GameWindow::InitD3dRendering(void)
                             else
                             {
                                 g_GameErrorContext.Fatal(TH_ERR_D3D_INIT_FAILED);
-                                if (g_Supervisor.d3dIface != NULL)
-                                {
-                                    g_Supervisor.d3dIface->Release();
-                                    g_Supervisor.d3dIface = NULL;
-                                }
+                                SAFE_RELEASE(g_Supervisor.d3dIface);
                                 return 1;
                             }
                         }
@@ -607,24 +603,4 @@ ZunResult CheckForRunningGameInstance(void)
     return ZUN_SUCCESS;
 }
 }; // namespace utils
-
-void GameErrorContext::Flush()
-{
-    FILE *logFile;
-
-    if (m_BufferEnd != m_Buffer)
-    {
-        this->Log(TH_ERR_LOGGER_END);
-
-        if (m_ShowMessageBox)
-        {
-            MessageBoxA(NULL, m_Buffer, "log", MB_ICONERROR);
-        }
-
-        logFile = fopen("./log.txt", "wt");
-
-        fprintf(logFile, m_Buffer);
-        fclose(logFile);
-    }
-}
 }; // namespace th06

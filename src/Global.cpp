@@ -266,14 +266,14 @@ void Chain::ReleaseSingleChain(ChainElem *root)
     ChainElem *tmp;
     ChainElem *wasNext;
 
-    tmp = new ChainElem();
+    tmp = ZUN_NEW(ChainElem);
     a0.next = tmp;
 
     current = root;
     while (current != NULL)
     {
         tmp->unkPtr = current;
-        tmp->next = new ChainElem();
+        tmp->next = ZUN_NEW(ChainElem);
         tmp = tmp->next;
         current = current->next;
     }
@@ -291,9 +291,8 @@ void Chain::ReleaseSingleChain(ChainElem *root)
     {
         wasNext = tmp->next;
 
-        delete tmp;
+        ZUN_DELETE(tmp);
 
-        tmp = NULL;
         tmp = wasNext;
     }
 }
@@ -308,7 +307,7 @@ ChainElem *Chain::CreateElem(ChainCallback callback)
 {
     ChainElem *elem;
 
-    elem = new ChainElem();
+    elem = ZUN_NEW(ChainElem);
 
     elem->callback = callback;
     elem->addedCallback = NULL;
@@ -411,6 +410,9 @@ DIFFABLE_STATIC(u16, g_CurFrameInput)
 
 // CMyFont
 DIFFABLE_STATIC(CMyFont, g_CMyFont)
+
+// ZunMemory
+DIFFABLE_STATIC(ZunMemory, g_ZunMemory);
 
 // FileSystem
 DIFFABLE_STATIC(u32, g_LastFileSize)
@@ -814,6 +816,12 @@ void Controller::ResetKeyboard(void)
 // All Rights Reserved.
 //
 // ----------------------------------------------------------------------------
+#define RELEASE(o)                                                                                                     \
+    if (o)                                                                                                             \
+    {                                                                                                                  \
+        o->Release();                                                                                                  \
+        o = NULL;                                                                                                      \
+    }
 
 void CMyFont::Init(LPDIRECT3DDEVICE8 lpD3DDEV, int w, int h)
 {
@@ -923,7 +931,7 @@ u8 *FileSystem::OpenPath(char *filepath, int isExternalResource)
             fsize = ftell(file);
             g_LastFileSize = fsize;
             fseek(file, 0, SEEK_SET);
-            data = (u8 *)malloc(fsize);
+            data = ZUN_ALLOC(fsize);
             fread(data, 1, fsize, file);
             fclose(file);
         }
