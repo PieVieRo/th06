@@ -1,11 +1,11 @@
 #pragma once
 
+#include "dxutil.hpp"
 #include <cstdarg>
 #include <d3d8.h>
 #include <d3dx8.h>
 #include <stdio.h>
 #include <windows.h>
-#include "dxutil.hpp"
 
 #include "ZunMath.hpp"
 #include "ZunResult.hpp"
@@ -26,18 +26,12 @@
 #define WAS_PRESSED_WEIRD(key)                                                                                         \
     (WAS_PRESSED(key) || (((g_CurFrameInput & (key)) != 0) && (g_IsEigthFrameOfHeldInput != 0)))
 
-#define ZUN_ALLOC(size) \
-    (u8 *)g_ZunMemory.Alloc(size)
-#define ZUN_ALLOC_TYPE(type) \
-    (type*)ZUN_ALLOC(sizeof(type))
-#define ZUN_ALLOC_ARRAY(type, count) \
-    (type *)ZUN_ALLOC(sizeof(type) * (count))
-#define ZUN_FREE(ptr) \
-    g_ZunMemory.Free(ptr)
-#define ZUN_NEW(type) \
-    g_ZunMemory.AddToRegistry(new type())
-#define ZUN_NEW_ARRAY(type, count) \
-    g_ZunMemory.AddToRegistry(new type[count]())
+#define ZUN_ALLOC(size) (u8 *)g_ZunMemory.Alloc(size)
+#define ZUN_ALLOC_TYPE(type) (type *)ZUN_ALLOC(sizeof(type))
+#define ZUN_ALLOC_ARRAY(type, count) (type *)ZUN_ALLOC(sizeof(type) * (count))
+#define ZUN_FREE(ptr) g_ZunMemory.Free(ptr)
+#define ZUN_NEW(type) g_ZunMemory.AddToRegistry(new type())
+#define ZUN_NEW_ARRAY(type, count) g_ZunMemory.AddToRegistry(new type[count]())
 #define ZUN_DELETE(p)                                                                                                  \
     g_ZunMemory.RemoveFromRegistry(p);                                                                                 \
     delete (p);                                                                                                        \
@@ -174,13 +168,11 @@ class ZunMemory
     {
         free(ptr);
     }
-    template <typename T>
-    T *AddToRegistry(T *ptr, size_t = sizeof(T), const char * = "")
+    template <typename T> T *AddToRegistry(T *ptr, size_t = sizeof(T), const char * = "")
     {
         return ptr;
     }
-    template <typename T>
-    void RemoveFromRegistry(T *ptr)
+    template <typename T> void RemoveFromRegistry(T *ptr)
     {
     }
 
