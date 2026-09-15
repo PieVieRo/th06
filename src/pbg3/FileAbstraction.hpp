@@ -9,6 +9,9 @@ namespace th06
 class IFileAbstraction
 {
   public:
+    IFileAbstraction()
+    {
+    }
     virtual i32 Open(char *filename, char *mode) = 0;
     virtual void Close() = 0;
     virtual i32 Read(u8 *data, u32 dataLen, u32 *numBytesRead) = 0;
