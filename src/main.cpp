@@ -22,12 +22,17 @@ namespace th06
 DIFFABLE_STATIC(HANDLE, g_ExclusiveMutex)
 }
 
+inline void fake_func()
+{
+    int pad;
+}
+
 #pragma var_order(renderResult, testCoopLevelRes, msg, testResetRes)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
     i32 renderResult = 0;
-    i32 testCoopLevelRes;
-    i32 testResetRes;
+    HRESULT testCoopLevelRes;
+    HRESULT testResetRes;
     MSG msg;
 
     if (utils::CheckForRunningGameInstance())
@@ -75,48 +80,53 @@ restart:
 
     if (Supervisor::RegisterChain() != ZUN_SUCCESS)
     {
-        goto stop;
+        // this is the most likely place an inlined function
+        // with an unused variable would be, since the branch
+        // is empty otherwise...
+        fake_func();
     }
-    if (!g_Supervisor.IsWindowed())
+    else
     {
-        ShowCursor(FALSE);
-    }
-
-    g_GameWindow.curFrame = 0;
-
-    while (!g_GameWindow.isAppClosing)
-    {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (!g_Supervisor.IsWindowed())
         {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            ShowCursor(FALSE);
         }
-        else
+
+        g_GameWindow.curFrame = 0;
+
+        while (!g_GameWindow.isAppClosing)
         {
-            testCoopLevelRes = g_Supervisor.d3dDevice->TestCooperativeLevel();
-            if (testCoopLevelRes == D3D_OK)
+            if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
             {
-                renderResult = g_GameWindow.Render();
-                if (renderResult != 0)
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            else
+            {
+                testCoopLevelRes = g_Supervisor.d3dDevice->TestCooperativeLevel();
+                if (testCoopLevelRes == D3D_OK)
                 {
-                    goto stop;
+                    renderResult = g_GameWindow.Render();
+                    if (renderResult != 0)
+                    {
+                        break;
+                    }
+                }
+                else if (testCoopLevelRes == D3DERR_DEVICENOTRESET)
+                {
+                    g_AnmManager->ReleaseSurfaces();
+                    testResetRes = g_Supervisor.d3dDevice->Reset(&g_Supervisor.presentParameters);
+                    if (testResetRes != 0)
+                    {
+                        break;
+                    }
+                    GameWindow::InitD3dDevice();
+                    g_Supervisor.unk198 = 3;
                 }
             }
-            else if (testCoopLevelRes == D3DERR_DEVICENOTRESET)
-            {
-                g_AnmManager->ReleaseSurfaces();
-                testResetRes = g_Supervisor.d3dDevice->Reset(&g_Supervisor.presentParameters);
-                if (testResetRes != 0)
-                {
-                    goto stop;
-                }
-                GameWindow::InitD3dDevice();
-                g_Supervisor.unk198 = 3;
-            }
         }
     }
 
-stop:
     g_Chain.Release();
     g_SoundPlayer.Release();
 
