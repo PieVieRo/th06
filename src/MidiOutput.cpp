@@ -494,7 +494,7 @@ void MidiOutput::OnTimerElapsed()
 }
 
 #pragma var_order(nextTrackLength, idx, arg2, lVar5, opcodeLow, opcodeHigh, opcode, arg1, curTrackLength, midiHdr,     \
-                  cVar1, unk24, local_2c, local_30, midiHeaderSize, lpdata)
+                  cVar1, unk24, local_2c, local_30)
 void MidiOutput::ProcessMsg(MidiTrack *track)
 {
     i32 lVar5;
@@ -504,10 +504,8 @@ void MidiOutput::ProcessMsg(MidiTrack *track)
     u8 arg1, arg2;
     u8 opcode, opcodeHigh, opcodeLow;
     u8 cVar1;
-    size_t midiHeaderSize;
     MIDIHDR *midiHdr;
     i32 idx;
-    LPSTR lpdata;
     i32 unk24;
 
     opcode = *track->curTrackDataCursor;
