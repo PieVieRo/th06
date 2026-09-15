@@ -22,14 +22,13 @@ namespace th06
 DIFFABLE_STATIC(HANDLE, g_ExclusiveMutex)
 }
 
-#pragma var_order(renderResult, testCoopLevelRes, msg, testResetRes, waste1, waste2, waste3, waste4, waste5, waste6)
-int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+#pragma var_order(renderResult, testCoopLevelRes, msg, testResetRes)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
     i32 renderResult = 0;
     i32 testCoopLevelRes;
     i32 testResetRes;
     MSG msg;
-    i32 waste1, waste2, waste3, waste4, waste5, waste6;
 
     if (utils::CheckForRunningGameInstance())
     {
@@ -72,13 +71,13 @@ restart:
     Controller::GetJoystickCaps();
     Controller::ResetKeyboard();
 
-    g_AnmManager = new AnmManager();
+    g_AnmManager = ZUN_NEW(AnmManager);
 
     if (Supervisor::RegisterChain() != ZUN_SUCCESS)
     {
         goto stop;
     }
-    if (!g_Supervisor.cfg.windowed)
+    if (!g_Supervisor.IsWindowed())
     {
         ShowCursor(FALSE);
     }
@@ -121,13 +120,8 @@ stop:
     g_Chain.Release();
     g_SoundPlayer.Release();
 
-    delete g_AnmManager;
-    g_AnmManager = NULL;
-    if (g_Supervisor.d3dDevice != NULL)
-    {
-        g_Supervisor.d3dDevice->Release();
-        g_Supervisor.d3dDevice = NULL;
-    }
+    ZUN_DELETE(g_AnmManager);
+    SAFE_RELEASE(g_Supervisor.d3dDevice);
 
     ShowWindow(g_GameWindow.window, 0);
     MoveWindow(g_GameWindow.window, 0, 0, 0, 0, 0);
@@ -139,7 +133,7 @@ stop:
 
         g_GameErrorContext.Log(TH_ERR_OPTION_CHANGED_RESTART);
 
-        if (!g_Supervisor.cfg.windowed)
+        if (!g_Supervisor.IsWindowed())
         {
             ShowCursor(TRUE);
         }
@@ -151,11 +145,7 @@ stop:
     SystemParametersInfo(SPI_SETLOWPOWERACTIVE, g_GameWindow.lowPowerActive, NULL, SPIF_SENDCHANGE);
     SystemParametersInfo(SPI_SETPOWEROFFACTIVE, g_GameWindow.powerOffActive, NULL, SPIF_SENDCHANGE);
 
-    if (g_Supervisor.d3dIface != NULL)
-    {
-        g_Supervisor.d3dIface->Release();
-        g_Supervisor.d3dIface = NULL;
-    }
+    SAFE_RELEASE(g_Supervisor.d3dIface);
 
     ShowCursor(TRUE);
     g_GameErrorContext.Flush();

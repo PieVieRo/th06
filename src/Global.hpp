@@ -5,6 +5,7 @@
 #include <d3dx8.h>
 #include <stdio.h>
 #include <windows.h>
+#include "dxutil.hpp"
 
 #include "ZunMath.hpp"
 #include "ZunResult.hpp"
@@ -25,15 +26,37 @@
 #define WAS_PRESSED_WEIRD(key)                                                                                         \
     (WAS_PRESSED(key) || (((g_CurFrameInput & (key)) != 0) && (g_IsEigthFrameOfHeldInput != 0)))
 
-#define RELEASE(o)                                                                                                     \
-    if (o)                                                                                                             \
+#define ZUN_ALLOC(size) \
+    (u8 *)g_ZunMemory.Alloc(size)
+#define ZUN_ALLOC_TYPE(type) \
+    (type*)ZUN_ALLOC(sizeof(type))
+#define ZUN_ALLOC_ARRAY(type, count) \
+    (type *)ZUN_ALLOC(sizeof(type) * (count))
+#define ZUN_FREE(ptr) \
+    g_ZunMemory.Free(ptr)
+#define ZUN_NEW(type) \
+    g_ZunMemory.AddToRegistry(new type())
+#define ZUN_NEW_ARRAY(type, count) \
+    g_ZunMemory.AddToRegistry(new type[count]())
+#define ZUN_DELETE(p)                                                                                                  \
+    g_ZunMemory.RemoveFromRegistry(p);                                                                                 \
+    delete (p);                                                                                                        \
+    (p) = NULL
+
+// Sometimes this is written manually, pay attention to whether
+// the NULL assign is inside the if statement or not.
+#define ZUN_SAFE_FREE(p)                                                                                               \
     {                                                                                                                  \
-        o->Release();                                                                                                  \
-        o = NULL;                                                                                                      \
+        if ((p) != NULL)                                                                                               \
+        {                                                                                                              \
+            ZUN_FREE(p);                                                                                               \
+            (p) = NULL;                                                                                                \
+        }                                                                                                              \
     }
 
 namespace th06
 {
+
 namespace utils
 {
 ZunResult CheckForRunningGameInstance(void);
@@ -133,6 +156,39 @@ class CMyFont
     virtual void Clean();
 };
 
+class ZunMemory
+{
+  public:
+    ZunMemory()
+    {
+        this->bRegistryInUse = FALSE;
+    }
+    ~ZunMemory()
+    {
+    }
+    void *Alloc(i32 size)
+    {
+        return malloc(size);
+    }
+    void Free(void *ptr)
+    {
+        free(ptr);
+    }
+    template <typename T>
+    T *AddToRegistry(T *ptr, size_t = sizeof(T), const char * = "")
+    {
+        return ptr;
+    }
+    template <typename T>
+    void RemoveFromRegistry(T *ptr)
+    {
+    }
+
+  private:
+    BOOL bRegistryInUse;
+};
+DIFFABLE_EXTERN(ZunMemory, g_ZunMemory);
+
 // From FileSystem.hpp
 namespace FileSystem
 {
@@ -206,10 +262,28 @@ class GameErrorContext
         // TODO: check if it should be m_Buffer[0] above.
     }
 
-    void Flush();
-
     const char *Fatal(const char *fmt, ...);
     const char *Log(const char *fmt, ...);
+
+    void Flush()
+    {
+        FILE *logFile;
+
+        if (m_BufferEnd != m_Buffer)
+        {
+            this->Log(TH_ERR_LOGGER_END);
+
+            if (m_ShowMessageBox)
+            {
+                MessageBoxA(NULL, m_Buffer, "log", MB_ICONERROR);
+            }
+
+            logFile = fopen("./log.txt", "wt");
+
+            fprintf(logFile, m_Buffer);
+            fclose(logFile);
+        }
+    }
 };
 
 DIFFABLE_EXTERN(GameErrorContext, g_GameErrorContext)

@@ -108,6 +108,7 @@ ZunBool MusicRoom::ProcessInput()
 
 ZunResult MusicRoom::RegisterChain()
 {
+    i32 pad[12];
     static MusicRoom g_MusicRoom;
     MusicRoom *musicRoom;
 
@@ -263,7 +264,7 @@ ZunResult MusicRoom::AddedCallback(MusicRoom *musicRoom)
         return ZUN_ERROR;
     }
 
-    musicRoom->trackDescriptors = new TrackDescriptor[ARRAY_SIZE_SIGNED(musicRoom->titleSprites)]();
+    musicRoom->trackDescriptors = ZUN_NEW_ARRAY(TrackDescriptor, ARRAY_SIZE_SIGNED(musicRoom->titleSprites));
 
     i = -1;
     while (currChar - fileBase < (i32)g_LastFileSize)
@@ -396,15 +397,14 @@ finishMusiccmtRead:
         musicRoom->descriptionSprites[i].flags.anchor = AnmVmAnchor_TopLeft;
     }
 
-    free(fileBase);
+    ZUN_FREE(fileBase);
 
     return ZUN_SUCCESS;
 }
 
 ZunResult MusicRoom::DeletedCallback(MusicRoom *musicRoom)
 {
-    delete musicRoom->trackDescriptors;
-    musicRoom->trackDescriptors = NULL;
+    ZUN_DELETE(musicRoom->trackDescriptors);
 
     g_AnmManager->ReleaseSurface(0);
     g_AnmManager->ReleaseAnm(ANM_FILE_MUSIC00);

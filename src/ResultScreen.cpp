@@ -10,7 +10,6 @@
 #include "ReplayManager.hpp"
 #include "SoundPlayer.hpp"
 #include "Stage.hpp"
-#include "ZunMemory.hpp"
 #include "i18n.hpp"
 #include <direct.h>
 #include <stdio.h>
@@ -55,7 +54,7 @@ ScoreDat *ResultScreen::OpenScore(char *path)
     if (scoreData == NULL)
     {
     FAILED_TO_READ:
-        scoreData = (ScoreDat *)ZunAlloc(sizeof(ScoreDat));
+        scoreData = ZUN_ALLOC_TYPE(ScoreDat);
         scoreData->dataOffset = sizeof(ScoreDat);
         scoreData->fileLen = sizeof(ScoreDat);
     }
@@ -63,7 +62,7 @@ ScoreDat *ResultScreen::OpenScore(char *path)
     {
         if (g_LastFileSize < sizeof(ScoreDat))
         {
-            free(scoreData);
+            ZUN_FREE(scoreData);
             goto FAILED_TO_READ;
         }
 
@@ -91,7 +90,7 @@ ScoreDat *ResultScreen::OpenScore(char *path)
         }
         if (scoreData->csum != checksum)
         {
-            free(scoreData);
+            ZUN_FREE(scoreData);
             goto FAILED_TO_READ;
         }
         fileLen = scoreData->fileLen;
@@ -107,11 +106,11 @@ ScoreDat *ResultScreen::OpenScore(char *path)
         }
         if (fileLen <= 0)
         {
-            free(scoreData);
+            ZUN_FREE(scoreData);
             goto FAILED_TO_READ;
         };
     }
-    scoreData->scores = (ScoreListNode *)ZunAlloc(sizeof(ScoreListNode));
+    scoreData->scores = ZUN_ALLOC_TYPE(ScoreListNode);
     scoreData->scores->next = NULL;
     scoreData->scores->data = NULL;
     scoreData->scores->prev = NULL;
@@ -196,7 +195,7 @@ i32 ResultScreen::LinkScore(ScoreListNode *prevNode, Hscr *newScore)
     }
     nextNode = prevNode->next;
 
-    prevNode->next = (ScoreListNode *)ZunAlloc(sizeof(ScoreListNode));
+    prevNode->next = ZUN_ALLOC_TYPE(ScoreListNode);
     prevNode->next->prev = prevNode;
     prevNode = prevNode->next;
     prevNode->data = newScore;
@@ -211,7 +210,7 @@ void ResultScreen::FreeAllScores(ScoreListNode *scores)
     while (scores != NULL)
     {
         next = scores->next;
-        free(scores);
+        ZUN_FREE(scores);
         scores = next;
     }
 }
@@ -359,11 +358,9 @@ ZunResult ResultScreen::ParsePscr(ScoreDat *scoreDat, Pscr *outClrd)
 
 void ResultScreen::ReleaseScoreDat(ScoreDat *scoreDat)
 {
-    ScoreListNode *scores;
     ResultScreen::FreeAllScores(scoreDat->scores);
-    scores = scoreDat->scores;
-    free(scores);
-    free(scoreDat);
+    ZUN_FREE(scoreDat->scores);
+    ZUN_FREE(scoreDat);
 }
 
 #pragma function("memcpy")
@@ -391,7 +388,7 @@ void ResultScreen::WriteScore(ResultScreen *resultScreen)
 
     sizeOfFile = 0;
 
-    fileBuffer = (u8 *)ZunAlloc(SCORE_DAT_FILE_BUFFER_SIZE);
+    fileBuffer = ZUN_ALLOC(SCORE_DAT_FILE_BUFFER_SIZE);
 
     memcpy(fileBuffer + sizeOfFile, resultScreen->scoreDat, sizeof(ScoreDat));
 
@@ -515,7 +512,7 @@ void ResultScreen::WriteScore(ResultScreen *resultScreen)
         remainingSize--;
     }
     FileSystem::WriteDataToFile("score.dat", fileBuffer, sizeOfFile);
-    free(fileBuffer);
+    ZUN_FREE(fileBuffer);
 }
 #pragma intrinsic("memcpy")
 
@@ -868,7 +865,7 @@ i32 ResultScreen::HandleReplaySaveKeyboard()
                 {
                     this->replays[idx] = *replayLoaded;
                 }
-                free(replayLoaded);
+                ZUN_FREE(replayLoaded);
             }
         }
 
@@ -1319,7 +1316,7 @@ ZunResult ResultScreen::RegisterChain(i32 unk)
 
     i32 unused[16];
     ResultScreen *resultScreen;
-    resultScreen = new ResultScreen();
+    resultScreen = ZUN_NEW(ResultScreen);
 
     utils::DebugPrint(TH_DBG_RESULTSCREEN_COUNAT, g_GameManager.counat);
 
@@ -1355,7 +1352,7 @@ ZunResult ResultScreen::RegisterChain(i32 unk)
 #pragma function(memset)
 ResultScreen::ResultScreen()
 {
-    i32 unused[12];
+    i32 pad[4];
     memset(this, 0, sizeof(ResultScreen));
     this->cursor = 1;
 }
@@ -2180,8 +2177,7 @@ ZunResult ResultScreen::DeletedCallback(ResultScreen *resultScreen)
 
     resultScreen->drawChain = NULL;
 
-    delete resultScreen;
-    resultScreen = NULL;
+    ZUN_DELETE(resultScreen);
 
     return ZUN_SUCCESS;
 }

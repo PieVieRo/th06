@@ -71,7 +71,7 @@ struct Ending
     ZunVec2 backgroundPos;
     f32 backgroundScrollSpeed;
     AnmVm sprites[16];
-    char *endFileData;
+    u8 *endFileData;
     ZunBool hasSeenEnding;
     ZunTimer timer1;
     ZunTimer timer2;
