@@ -205,9 +205,9 @@ struct AnmVm
 };
 ZUN_ASSERT_SIZE(AnmVm, 0x110);
 
-struct PaddedAnmVm : AnmVm
+struct FakePaddedAnmVm : AnmVm
 {
-    PaddedAnmVm()
+    FakePaddedAnmVm()
     {
         FAKE_INLINE_DWORD_STACK_PADDING<4>();
     }

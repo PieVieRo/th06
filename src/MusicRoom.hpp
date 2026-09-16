@@ -44,9 +44,9 @@ struct MusicRoom
     i32 listingOffset;
     i32 numDescriptors;
     TrackDescriptor *trackDescriptors;
-    PaddedAnmVm mainVm[1];
-    PaddedAnmVm titleSprites[32];
-    PaddedAnmVm descriptionSprites[16];
+    FakePaddedAnmVm mainVm[1];
+    FakePaddedAnmVm titleSprites[32];
+    FakePaddedAnmVm descriptionSprites[16];
 };
 ZUN_ASSERT_SIZE(MusicRoom, 0x3434);
 }; // namespace th06
