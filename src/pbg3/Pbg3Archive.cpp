@@ -4,7 +4,7 @@
 
 namespace th06
 {
-DIFFABLE_STATIC(Pbg3Archive **, g_Pbg3Archives)
+DIFFABLE_STATIC_ASSIGN(Pbg3Archive **, g_Pbg3Archives) = NULL;
 
 Pbg3Archive::Pbg3Archive()
 {
@@ -91,7 +91,7 @@ i32 Pbg3Archive::Release()
         delete[] this->entries;
         this->entries = NULL;
     }
-    delete this->unk;
+    free(this->unk);
     return TRUE;
 }
 
@@ -214,7 +214,7 @@ i32 Pbg3Archive::Load(char *path)
     if (inBitMask == 0x80)                                                                                             \
     {                                                                                                                  \
         currByte = *inCursor;                                                                                          \
-        if (inCursor - rawData >= (i32)size)                                                                           \
+        if (inCursor - rawData >= inSize)                                                                              \
         {                                                                                                              \
             currByte = 0;                                                                                              \
         }                                                                                                              \
@@ -246,7 +246,10 @@ i32 Pbg3Archive::Load(char *path)
 
 u8 *Pbg3Archive::ReadDecompressEntry(u32 entryIdx, char *filename)
 {
-    if (entryIdx >= this->numOfEntries || this->parser == NULL)
+    if (entryIdx >= this->numOfEntries)
+        return NULL;
+
+    if (this->parser == NULL)
         return NULL;
 
     u32 size = this->GetEntrySize(entryIdx);
@@ -261,23 +264,21 @@ u8 *Pbg3Archive::ReadDecompressEntry(u32 entryIdx, char *filename)
 
     if (rawData == NULL)
     {
-        if (out != NULL)
-        {
-            free(out);
-            out = NULL;
-        }
+        free(out);
         return NULL;
     }
 
     u8 *inCursor = rawData;
     u8 inBitMask = 0x80;
     u32 checksum = 0;
+    i32 inSize = size;
     u32 dictHead = 1;
 
     u8 dict[LZSS_DICTSIZE];
 
+    i32 i;
     // Memset doesn't produce matching assembly
-    for (i32 i = 0; i < LZSS_DICTSIZE; i++)
+    for (i = 0; i < LZSS_DICTSIZE; i++)
     {
         dict[i] = 0;
     }
@@ -286,6 +287,7 @@ u8 *Pbg3Archive::ReadDecompressEntry(u32 entryIdx, char *filename)
     u32 inBits;
     u32 outBitMask;
     u32 matchOffset;
+    i32 matchLength;
     u32 opcode;
 
     for (;;)
@@ -311,7 +313,8 @@ u8 *Pbg3Archive::ReadDecompressEntry(u32 entryIdx, char *filename)
 
             DEC_READ_BITS(4);
 
-            for (i32 i = 0; i <= (i32)inBits + 2; i++)
+            matchLength = inBits + 2;
+            for (i = 0; i <= matchLength; i++)
             {
                 u32 c = dict[(matchOffset + i) & LZSS_DICTSIZE_MASK];
                 DEC_WRITE_BYTE(c);
@@ -329,11 +332,7 @@ u8 *Pbg3Archive::ReadDecompressEntry(u32 entryIdx, char *filename)
 
     if (this->entries[entryIdx].checksum != checksum)
     {
-        if (out != NULL)
-        {
-            free(out);
-            out = NULL;
-        }
+        free(out);
         return NULL;
     }
 

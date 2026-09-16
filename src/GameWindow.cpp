@@ -1,12 +1,13 @@
 #include "GameWindow.hpp"
 #include "AnmManager.hpp"
-#include "GameErrorContext.hpp"
+#include "Global.hpp"
 #include "ScreenEffect.hpp"
 #include "SoundPlayer.hpp"
 #include "Stage.hpp"
 #include "Supervisor.hpp"
 #include "diffbuild.hpp"
 #include "i18n.hpp"
+#include <stdio.h>
 
 namespace th06
 {
@@ -388,11 +389,7 @@ i32 GameWindow::InitD3dRendering(void)
                             else
                             {
                                 g_GameErrorContext.Fatal(TH_ERR_D3D_INIT_FAILED);
-                                if (g_Supervisor.d3dIface != NULL)
-                                {
-                                    g_Supervisor.d3dIface->Release();
-                                    g_Supervisor.d3dIface = NULL;
-                                }
+                                SAFE_RELEASE(g_Supervisor.d3dIface);
                                 return 1;
                             }
                         }
@@ -586,4 +583,24 @@ void GameWindow::InitD3dDevice(void)
     g_Stage.skyFogNeedsSetup = 1;
     return;
 }
+
+namespace utils
+{
+ZunResult CheckForRunningGameInstance(void)
+{
+    g_ExclusiveMutex = CreateMutex(NULL, TRUE, TEXT("Touhou Koumakyou App"));
+
+    if (g_ExclusiveMutex == NULL)
+    {
+        return ZUN_ERROR;
+    }
+    else if (GetLastError() == ERROR_ALREADY_EXISTS)
+    {
+        g_GameErrorContext.Fatal(TH_ERR_ALREADY_RUNNING);
+        return ZUN_ERROR;
+    }
+
+    return ZUN_SUCCESS;
+}
+}; // namespace utils
 }; // namespace th06

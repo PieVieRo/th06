@@ -3,15 +3,12 @@
 #include "AnmManager.hpp"
 #include "Chain.hpp"
 #include "ChainPriorities.hpp"
-#include "FileSystem.hpp"
-#include "GameErrorContext.hpp"
 #include "GameManager.hpp"
+#include "Global.hpp"
 #include "Player.hpp"
 #include "ScreenEffect.hpp"
 #include "Supervisor.hpp"
-#include "ZunMemory.hpp"
 #include "i18n.hpp"
-#include "utils.hpp"
 
 namespace th06
 {
@@ -428,10 +425,10 @@ endParsing:
 
 ZunResult Ending::LoadEnding(char *endFilePath)
 {
-    char *endFileDat;
+    u8 *endFileDat;
 
     endFileDat = this->endFileData;
-    this->endFileData = (char *)FileSystem::OpenPath(endFilePath, false);
+    this->endFileData = FileSystem::OpenPath(endFilePath, false);
     if (this->endFileData == NULL)
     {
         g_GameErrorContext.Log(TH_ERR_ENDING_END_FILE_CORRUPTED);
@@ -439,7 +436,7 @@ ZunResult Ending::LoadEnding(char *endFilePath)
     }
     else
     {
-        this->endFileDataPtr = this->endFileData;
+        this->endFileDataPtr = (char *)this->endFileData;
         this->line2Delay = 8;
         this->timer2.InitializeForPopup();
         this->timer1.InitializeForPopup();
@@ -455,7 +452,7 @@ ZunResult Ending::RegisterChain()
 {
     Ending *ending;
 
-    ending = new Ending();
+    ending = ZUN_NEW(Ending);
     ending->calcChain = g_Chain.CreateElem((ChainCallback)Ending::OnUpdate);
     ending->calcChain->arg = ending;
     ending->calcChain->addedCallback = (ChainAddedCallback)Ending::AddedCallback;
@@ -624,13 +621,12 @@ ZunResult Ending::DeletedCallback(Ending *ending)
     g_Supervisor.curState = SUPERVISOR_STATE_RESULTSCREEN_FROMGAME;
 
     g_AnmManager->ReleaseSurface(0);
-    ZunFree(ending->endFileData);
+    ZUN_FREE(ending->endFileData);
 
     g_Chain.Cut(ending->drawChain);
     ending->drawChain = NULL;
 
-    delete ending;
-    ending = NULL;
+    ZUN_DELETE(ending);
 
     g_Supervisor.isInEnding = false;
     g_Supervisor.ReleasePbg3(ED_PBG3_INDEX);

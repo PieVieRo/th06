@@ -7,6 +7,11 @@ Pbg3Parser::Pbg3Parser() : IPbg3Parser(), FileAbstraction()
 {
 }
 
+Pbg3Parser::~Pbg3Parser()
+{
+    this->Close();
+}
+
 i32 Pbg3Parser::OpenArchive(char *path)
 {
     this->Close();
@@ -90,7 +95,7 @@ u32 Pbg3Parser::ReadInt(u32 numBitsAsPowersOf2)
     return result;
 }
 
-i32 Pbg3Parser::ReadByteAssumeAligned()
+i32 Pbg3Parser::ReadByte()
 {
     if (this->offsetInFile < this->fileSize)
     {
@@ -155,19 +160,5 @@ i32 Pbg3Parser::GetLastWriteTime(LPFILETIME lastWriteTime)
 
     // EWWWW abstraction violation much? (Maybe this is an inlined function?)
     return FileAbstraction::GetLastWriteTime(lastWriteTime);
-}
-
-// Optimizing for size here needed to prevent the inlining of ReadByteAssumeAligned
-#pragma optimize("s", on)
-i32 Pbg3Parser::ReadByte()
-{
-    // MSVC generates an add -0x18 instruction to get the caller base here, while the original binary uses a sub 0x18?
-    return Pbg3Parser::ReadByteAssumeAligned();
-}
-#pragma optimize("", on)
-
-Pbg3Parser::~Pbg3Parser()
-{
-    this->Close();
 }
 }; // namespace th06

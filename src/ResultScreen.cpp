@@ -4,17 +4,13 @@
 #include "BulletManager.hpp"
 #include "Chain.hpp"
 #include "ChainPriorities.hpp"
-#include "Controller.hpp"
-#include "FileSystem.hpp"
 #include "GameManager.hpp"
+#include "Global.hpp"
 #include "Player.hpp"
 #include "ReplayManager.hpp"
-#include "Rng.hpp"
 #include "SoundPlayer.hpp"
 #include "Stage.hpp"
-#include "ZunMemory.hpp"
 #include "i18n.hpp"
-#include "utils.hpp"
 #include <direct.h>
 #include <stdio.h>
 #include <time.h>
@@ -58,7 +54,7 @@ ScoreDat *ResultScreen::OpenScore(char *path)
     if (scoreData == NULL)
     {
     FAILED_TO_READ:
-        scoreData = (ScoreDat *)ZunAlloc(sizeof(ScoreDat));
+        scoreData = ZUN_ALLOC_TYPE(ScoreDat);
         scoreData->dataOffset = sizeof(ScoreDat);
         scoreData->fileLen = sizeof(ScoreDat);
     }
@@ -66,7 +62,7 @@ ScoreDat *ResultScreen::OpenScore(char *path)
     {
         if (g_LastFileSize < sizeof(ScoreDat))
         {
-            free(scoreData);
+            ZUN_FREE(scoreData);
             goto FAILED_TO_READ;
         }
 
@@ -94,27 +90,27 @@ ScoreDat *ResultScreen::OpenScore(char *path)
         }
         if (scoreData->csum != checksum)
         {
-            free(scoreData);
+            ZUN_FREE(scoreData);
             goto FAILED_TO_READ;
         }
         fileLen = scoreData->fileLen;
-        decryptedFilePointer = scoreData->ShiftBytes(scoreData->dataOffset);
+        decryptedFilePointer = (Th6k *)((u8 *)scoreData + scoreData->dataOffset);
         fileLen -= scoreData->dataOffset;
         while (fileLen > 0)
         {
             if (decryptedFilePointer->magic == TH6K_MAGIC)
                 break;
 
-            decryptedFilePointer = decryptedFilePointer->ShiftBytes(decryptedFilePointer->th6kLen);
+            decryptedFilePointer = (Th6k *)((u8 *)decryptedFilePointer + decryptedFilePointer->th6kLen);
             fileLen = fileLen - decryptedFilePointer->th6kLen;
         }
         if (fileLen <= 0)
         {
-            free(scoreData);
+            ZUN_FREE(scoreData);
             goto FAILED_TO_READ;
         };
     }
-    scoreData->scores = (ScoreListNode *)ZunAlloc(sizeof(ScoreListNode));
+    scoreData->scores = ZUN_ALLOC_TYPE(ScoreListNode);
     scoreData->scores->next = NULL;
     scoreData->scores->data = NULL;
     scoreData->scores->prev = NULL;
@@ -141,7 +137,7 @@ u32 ResultScreen::GetHighScore(ScoreDat *scoreDat, ScoreListNode *node, u32 char
     }
 
     remainingSize = scoreData->fileLen;
-    highScore = (Hscr *)scoreData->ShiftBytes(scoreData->dataOffset);
+    highScore = (Hscr *)((u8 *)scoreData + scoreData->dataOffset);
     remainingSize -= scoreData->dataOffset;
 
     while (remainingSize > 0)
@@ -160,7 +156,7 @@ u32 ResultScreen::GetHighScore(ScoreDat *scoreDat, ScoreListNode *node, u32 char
         }
 
         remainingSize -= highScore->base.th6kLen;
-        highScore = highScore->ShiftBytes(highScore->base.th6kLen);
+        highScore = (Hscr *)((u8 *)highScore + highScore->base.th6kLen);
     }
     if (scoreData->scores->next != NULL)
     {
@@ -199,7 +195,7 @@ i32 ResultScreen::LinkScore(ScoreListNode *prevNode, Hscr *newScore)
     }
     nextNode = prevNode->next;
 
-    prevNode->next = (ScoreListNode *)ZunAlloc(sizeof(ScoreListNode));
+    prevNode->next = ZUN_ALLOC_TYPE(ScoreListNode);
     prevNode->next->prev = prevNode;
     prevNode = prevNode->next;
     prevNode->data = newScore;
@@ -214,7 +210,7 @@ void ResultScreen::FreeAllScores(ScoreListNode *scores)
     while (scores != NULL)
     {
         next = scores->next;
-        free(scores);
+        ZUN_FREE(scores);
         scores = next;
     }
 }
@@ -233,7 +229,7 @@ ZunResult ResultScreen::ParseCatk(ScoreDat *scoreDat, Catk *outCatk)
         return ZUN_ERROR;
     }
 
-    parsedCatk = (Catk *)sd->ShiftBytes(sd->dataOffset);
+    parsedCatk = (Catk *)((u8 *)sd + sd->dataOffset);
     cursor = sd->fileLen - sd->dataOffset;
     while (cursor > 0)
     {
@@ -283,7 +279,7 @@ ZunResult ResultScreen::ParseClrd(ScoreDat *scoreDat, Clrd *outClrd)
         }
     }
 
-    parsedClrd = (Clrd *)sd->ShiftBytes(sd->dataOffset);
+    parsedClrd = (Clrd *)((u8 *)sd + sd->dataOffset);
     cursor = sd->fileLen - sd->dataOffset;
     while (cursor > 0)
     {
@@ -339,7 +335,7 @@ ZunResult ResultScreen::ParsePscr(ScoreDat *scoreDat, Pscr *outClrd)
         }
     }
 
-    parsedPscr = (Pscr *)sd->ShiftBytes(sd->dataOffset);
+    parsedPscr = (Pscr *)((u8 *)sd + sd->dataOffset);
     cursor = sd->fileLen - sd->dataOffset;
 
     while (cursor > 0)
@@ -354,7 +350,7 @@ ZunResult ResultScreen::ParsePscr(ScoreDat *scoreDat, Pscr *outClrd)
             outClrd[pscr->character * 6 * 4 + pscr->stage * 4 + pscr->difficulty] = *pscr;
         }
         cursor -= parsedPscr->base.th6kLen;
-        parsedPscr = parsedPscr->ShiftBytes(parsedPscr->base.th6kLen);
+        parsedPscr = (Pscr *)((u8 *)parsedPscr + parsedPscr->base.th6kLen);
     }
     return ZUN_SUCCESS;
 }
@@ -362,11 +358,9 @@ ZunResult ResultScreen::ParsePscr(ScoreDat *scoreDat, Pscr *outClrd)
 
 void ResultScreen::ReleaseScoreDat(ScoreDat *scoreDat)
 {
-    ScoreListNode *scores;
     ResultScreen::FreeAllScores(scoreDat->scores);
-    scores = scoreDat->scores;
-    free(scores);
-    free(scoreDat);
+    ZUN_FREE(scoreDat->scores);
+    ZUN_FREE(scoreDat);
 }
 
 #pragma function("memcpy")
@@ -394,7 +388,7 @@ void ResultScreen::WriteScore(ResultScreen *resultScreen)
 
     sizeOfFile = 0;
 
-    fileBuffer = (u8 *)ZunAlloc(SCORE_DAT_FILE_BUFFER_SIZE);
+    fileBuffer = ZUN_ALLOC(SCORE_DAT_FILE_BUFFER_SIZE);
 
     memcpy(fileBuffer + sizeOfFile, resultScreen->scoreDat, sizeof(ScoreDat));
 
@@ -502,7 +496,7 @@ void ResultScreen::WriteScore(ResultScreen *resultScreen)
     xorValue = 0;
     originalByte = 0;
 
-    bytes = (u8 *)sd->ShiftOneByte();
+    bytes = (u8 *)sd + 1;
     remainingSize = sizeOfFile;
 
     remainingSize -= 2;
@@ -518,7 +512,7 @@ void ResultScreen::WriteScore(ResultScreen *resultScreen)
         remainingSize--;
     }
     FileSystem::WriteDataToFile("score.dat", fileBuffer, sizeOfFile);
-    free(fileBuffer);
+    ZUN_FREE(fileBuffer);
 }
 #pragma intrinsic("memcpy")
 
@@ -529,7 +523,7 @@ i32 ResultScreen::LinkScoreEx(Hscr *out, i32 difficulty, i32 character)
 
 void ResultScreen::FreeScore(i32 difficulty, i32 character)
 {
-    free(&this->scores[difficulty][character]);
+    ResultScreen::FreeAllScores(&this->scores[difficulty][character]);
 }
 
 #pragma function("strcpy")
@@ -560,7 +554,7 @@ i32 ResultScreen::HandleResultKeyboard()
         }
 
         g_AnmManager->DrawStringFormat2(&this->unk_28a0[1], COLOR_RGB(COLOR_WHITE), COLOR_RGB(COLOR_BLACK),
-                                        g_CharacterList[this->charUsed * 2]);
+                                        g_CharacterList[this->charUsed * 2 + 1]);
         if (g_GameManager.shotType != SHOT_TYPE_B)
         {
             this->unk_28a0[1].color = COLOR_TRANSPARENT_WHITE;
@@ -871,7 +865,7 @@ i32 ResultScreen::HandleReplaySaveKeyboard()
                 {
                     this->replays[idx] = *replayLoaded;
                 }
-                free(replayLoaded);
+                ZUN_FREE(replayLoaded);
             }
         }
 
@@ -1212,11 +1206,11 @@ u32 ResultScreen::DrawFinalStats()
         g_AsciiManager.color = color;
         unknownFloat = 0.0;
 
-        completion = g_GameManager.difficulty < 4 ? g_GameManager.counat / 39600.0f : g_GameManager.counat / 89500.0f;
+        completion = g_GameManager.difficulty < 4 ? g_GameManager.counat / 89500.0f : g_GameManager.counat / 39600.0f;
         strPos = viewport->pos;
         strPos.x += 224.0f;
         strPos.y += 32.0f;
-        g_AsciiManager.AddFormatText(&strPos, "%9d", g_GameManager.score);
+        g_AsciiManager.AddFormatText(&strPos, "%9d", g_GameManager.guiScore);
 
         if (g_GameManager.guiScore < 2000000)
         {
@@ -1316,13 +1310,12 @@ u32 ResultScreen::DrawFinalStats()
     return 0;
 }
 
-#pragma var_order(resultScreen, unused)
 ZunResult ResultScreen::RegisterChain(i32 unk)
 {
+    FAKE_INLINE_DWORD_STACK_PADDING<16>();
 
-    i32 unused[16];
     ResultScreen *resultScreen;
-    resultScreen = new ResultScreen();
+    resultScreen = ZUN_NEW(ResultScreen);
 
     utils::DebugPrint(TH_DBG_RESULTSCREEN_COUNAT, g_GameManager.counat);
 
@@ -1358,7 +1351,6 @@ ZunResult ResultScreen::RegisterChain(i32 unk)
 #pragma function(memset)
 ResultScreen::ResultScreen()
 {
-    i32 unused[12];
     memset(this, 0, sizeof(ResultScreen));
     this->cursor = 1;
 }
@@ -2183,8 +2175,7 @@ ZunResult ResultScreen::DeletedCallback(ResultScreen *resultScreen)
 
     resultScreen->drawChain = NULL;
 
-    delete resultScreen;
-    resultScreen = NULL;
+    ZUN_DELETE(resultScreen);
 
     return ZUN_SUCCESS;
 }

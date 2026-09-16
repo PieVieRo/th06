@@ -1,11 +1,10 @@
 #include "BombData.hpp"
 
 #include "EffectManager.hpp"
+#include "Global.hpp"
 #include "Gui.hpp"
-#include "Rng.hpp"
 #include "ScreenEffect.hpp"
 #include "i18n.hpp"
-#include "utils.hpp"
 
 namespace th06
 {
@@ -153,7 +152,7 @@ void BombData::BombReimuACalc(Player *player)
                     player->bombProjectiles[i].sizeX = 256.0f;
                     player->bombProjectiles[i].sizeY = 256.0f;
 
-                    player->bombInfo.bombRegionVelocities[i] / 100.0f; // ZUN moment
+                    player->bombInfo.bombRegionVelocities[i] / 8.0f; // ZUN moment
 
                     g_SoundPlayer.PlaySoundByIdx(SOUND_F, 0);
                     ScreenEffect::RegisterChain(SCREEN_EFFECT_SHAKE, 16, 8, 0, 0);

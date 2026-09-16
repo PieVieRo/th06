@@ -5,7 +5,7 @@
 #include <dinput.h>
 
 #include "Chain.hpp"
-#include "Controller.hpp"
+#include "Global.hpp"
 #include "MidiOutput.hpp"
 #include "ZunBool.hpp"
 #include "ZunResult.hpp"
@@ -134,15 +134,20 @@ struct Supervisor
         return this->effectiveFramerateMultiplier;
     }
 
-    u32 IsUnknown()
+    ZunBool IsUnknown()
     {
         return this->cfg.opts >> GCOS_CLEAR_BACKBUFFER_ON_REFRESH & 1 |
                this->cfg.opts >> GCOS_DISPLAY_MINIMUM_GRAPHICS & 1;
     }
 
-    u32 ShouldRunAt60Fps()
+    ZunBool ShouldRunAt60Fps()
     {
         return (this->cfg.opts >> GCOS_FORCE_60FPS & 1) && this->vsyncEnabled;
+    }
+
+    ZunBool IsWindowed()
+    {
+        return this->cfg.windowed;
     }
 
     HINSTANCE hInstance;
@@ -192,9 +197,5 @@ ZUN_ASSERT_SIZE(Supervisor, 0x4d8);
 
 DIFFABLE_EXTERN(ControllerMapping, g_ControllerMapping)
 DIFFABLE_EXTERN(Supervisor, g_Supervisor)
-DIFFABLE_EXTERN(u16, g_LastFrameInput)
-DIFFABLE_EXTERN(u16, g_CurFrameInput)
-DIFFABLE_EXTERN(u16, g_IsEigthFrameOfHeldInput)
 DIFFABLE_EXTERN(IDirect3DSurface8 *, g_TextBufferSurface)
-DIFFABLE_EXTERN(u16, g_NumOfFramesInputsWereHeld);
 }; // namespace th06

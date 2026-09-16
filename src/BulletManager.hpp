@@ -38,6 +38,16 @@ struct BulletTypeSprites
 };
 ZUN_ASSERT_SIZE(BulletTypeSprites, 0x560);
 
+enum BulletState
+{
+    BULLET_STATE_UNUSED,
+    BULLET_STATE_FIRED,
+    BULLET_STATE_SPAWNING_FAST,
+    BULLET_STATE_SPAWNING_NORMAL,
+    BULLET_STATE_SPAWNING_SLOW,
+    BULLET_STATE_DESPAWNING,
+};
+
 struct Bullet
 {
     BulletTypeSprites sprites;
@@ -86,6 +96,13 @@ struct Laser
     u16 flags;
     i16 color;
     u8 state;
+
+    Laser()
+    {
+        // this *one thing* doesn't match even
+        // with FAKE_INLINE_DWORD_STACK_PADDING
+        i32 pad[4];
+    }
 };
 ZUN_ASSERT_SIZE(Laser, 0x270);
 

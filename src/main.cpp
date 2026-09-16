@@ -7,26 +7,28 @@
 
 #include "AnmManager.hpp"
 #include "Chain.hpp"
-#include "FileSystem.hpp"
-#include "GameErrorContext.hpp"
 #include "GameWindow.hpp"
+#include "Global.hpp"
 #include "SoundPlayer.hpp"
 #include "Stage.hpp"
 #include "Supervisor.hpp"
 #include "ZunResult.hpp"
 #include "i18n.hpp"
-#include "utils.hpp"
 
 using namespace th06;
 
-#pragma var_order(renderResult, testCoopLevelRes, msg, testResetRes, waste1, waste2, waste3, waste4, waste5, waste6)
-int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+namespace th06
+{
+DIFFABLE_STATIC(HANDLE, g_ExclusiveMutex)
+}
+
+#pragma var_order(renderResult, testCoopLevelRes, msg, testResetRes)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
     i32 renderResult = 0;
-    i32 testCoopLevelRes;
-    i32 testResetRes;
+    HRESULT testCoopLevelRes;
+    HRESULT testResetRes;
     MSG msg;
-    i32 waste1, waste2, waste3, waste4, waste5, waste6;
 
     if (utils::CheckForRunningGameInstance())
     {
@@ -69,62 +71,62 @@ restart:
     Controller::GetJoystickCaps();
     Controller::ResetKeyboard();
 
-    g_AnmManager = new AnmManager();
+    g_AnmManager = ZUN_NEW(AnmManager);
 
     if (Supervisor::RegisterChain() != ZUN_SUCCESS)
     {
-        goto stop;
+        // this is the most likely place an inlined function
+        // with an unused variable would be, since the branch
+        // is empty otherwise...
+        FAKE_INLINE_DWORD_STACK_PADDING<1>();
     }
-    if (!g_Supervisor.cfg.windowed)
+    else
     {
-        ShowCursor(FALSE);
-    }
-
-    g_GameWindow.curFrame = 0;
-
-    while (!g_GameWindow.isAppClosing)
-    {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (!g_Supervisor.IsWindowed())
         {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            ShowCursor(FALSE);
         }
-        else
+
+        g_GameWindow.curFrame = 0;
+
+        while (!g_GameWindow.isAppClosing)
         {
-            testCoopLevelRes = g_Supervisor.d3dDevice->TestCooperativeLevel();
-            if (testCoopLevelRes == D3D_OK)
+            if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
             {
-                renderResult = g_GameWindow.Render();
-                if (renderResult != 0)
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            else
+            {
+                testCoopLevelRes = g_Supervisor.d3dDevice->TestCooperativeLevel();
+                if (testCoopLevelRes == D3D_OK)
                 {
-                    goto stop;
+                    renderResult = g_GameWindow.Render();
+                    if (renderResult != 0)
+                    {
+                        break;
+                    }
+                }
+                else if (testCoopLevelRes == D3DERR_DEVICENOTRESET)
+                {
+                    g_AnmManager->ReleaseSurfaces();
+                    testResetRes = g_Supervisor.d3dDevice->Reset(&g_Supervisor.presentParameters);
+                    if (testResetRes != 0)
+                    {
+                        break;
+                    }
+                    GameWindow::InitD3dDevice();
+                    g_Supervisor.unk198 = 3;
                 }
             }
-            else if (testCoopLevelRes == D3DERR_DEVICENOTRESET)
-            {
-                g_AnmManager->ReleaseSurfaces();
-                testResetRes = g_Supervisor.d3dDevice->Reset(&g_Supervisor.presentParameters);
-                if (testResetRes != 0)
-                {
-                    goto stop;
-                }
-                GameWindow::InitD3dDevice();
-                g_Supervisor.unk198 = 3;
-            }
         }
     }
 
-stop:
     g_Chain.Release();
     g_SoundPlayer.Release();
 
-    delete g_AnmManager;
-    g_AnmManager = NULL;
-    if (g_Supervisor.d3dDevice != NULL)
-    {
-        g_Supervisor.d3dDevice->Release();
-        g_Supervisor.d3dDevice = NULL;
-    }
+    ZUN_DELETE(g_AnmManager);
+    SAFE_RELEASE(g_Supervisor.d3dDevice);
 
     ShowWindow(g_GameWindow.window, 0);
     MoveWindow(g_GameWindow.window, 0, 0, 0, 0, 0);
@@ -136,7 +138,7 @@ stop:
 
         g_GameErrorContext.Log(TH_ERR_OPTION_CHANGED_RESTART);
 
-        if (!g_Supervisor.cfg.windowed)
+        if (!g_Supervisor.IsWindowed())
         {
             ShowCursor(TRUE);
         }
@@ -148,11 +150,7 @@ stop:
     SystemParametersInfo(SPI_SETLOWPOWERACTIVE, g_GameWindow.lowPowerActive, NULL, SPIF_SENDCHANGE);
     SystemParametersInfo(SPI_SETPOWEROFFACTIVE, g_GameWindow.powerOffActive, NULL, SPIF_SENDCHANGE);
 
-    if (g_Supervisor.d3dIface != NULL)
-    {
-        g_Supervisor.d3dIface->Release();
-        g_Supervisor.d3dIface = NULL;
-    }
+    SAFE_RELEASE(g_Supervisor.d3dIface);
 
     ShowCursor(TRUE);
     g_GameErrorContext.Flush();

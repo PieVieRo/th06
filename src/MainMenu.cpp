@@ -8,9 +8,8 @@
 #include "AnmManager.hpp"
 #include "AsciiManager.hpp"
 #include "ChainPriorities.hpp"
-#include "Filesystem.hpp"
-#include "GameErrorContext.hpp"
 #include "GameManager.hpp"
+#include "Global.hpp"
 #include "ReplayData.hpp"
 #include "ReplayManager.hpp"
 #include "ResultScreen.hpp"
@@ -19,7 +18,6 @@
 #include "Supervisor.hpp"
 #include "ZunColor.hpp"
 #include "i18n.hpp"
-#include "utils.hpp"
 
 namespace th06
 {
@@ -1258,8 +1256,7 @@ ZunResult MainMenu::DrawStartMenu(void)
 }
 
 #pragma function(strcpy)
-#pragma var_order(anmVm, cur, replayFileHandle, replayFileIdx, replayData, replayFilePath, replayFileInfo, uh, uh2,    \
-                  padding)
+#pragma var_order(anmVm, cur, replayFileHandle, replayFileIdx, replayData, padding, replayFilePath, replayFileInfo)
 i32 MainMenu::ReplayHandling()
 {
     AnmVm *anmVm;
@@ -1300,7 +1297,7 @@ i32 MainMenu::ReplayHandling()
                         sprintf(this->replayFileName[replayFileIdx], "No.%.2d", cur + 1);
                         replayFileIdx++;
                     }
-                    free(replayData);
+                    ZUN_FREE(replayData);
                 }
                 _mkdir("./replay");
                 _chdir("./replay");
@@ -1309,7 +1306,7 @@ i32 MainMenu::ReplayHandling()
                 {
                     for (cur = 0; cur < 0x2d; cur++)
                     {
-                        replayData = (ReplayData *)FileSystem::OpenPath(replayFilePath, 1);
+                        replayData = (ReplayData *)FileSystem::OpenPath(replayFileInfo.cFileName, 1);
                         if (replayData == NULL)
                         {
                             continue;
@@ -1321,7 +1318,7 @@ i32 MainMenu::ReplayHandling()
                             sprintf(this->replayFileName[replayFileIdx], "User ");
                             replayFileIdx++;
                         }
-                        free(replayData);
+                        ZUN_FREE(replayData);
                         if (!FindNextFileA(replayFileHandle, &replayFileInfo))
                             break;
                     }
@@ -1388,7 +1385,7 @@ i32 MainMenu::ReplayHandling()
                 {
                     this->cursor = this->cursor + 1;
 
-                    if ((int)this->cursor >= ARRAY_SIZE_SIGNED(this->currentReplay->stageReplayData))
+                    if (this->cursor >= ARRAY_SIZE_SIGNED(this->currentReplay->stageReplayData))
                     {
                         return ZUN_SUCCESS;
                     }
@@ -1451,8 +1448,7 @@ i32 MainMenu::ReplayHandling()
             }
             g_GameManager.livesRemaining = this->currentReplay->stageReplayData[cur]->livesRemaining;
             g_GameManager.bombsRemaining = this->currentReplay->stageReplayData[cur]->bombsRemaining;
-            ReplayData *uh = this->currentReplay;
-            free(uh);
+            ZUN_FREE(this->currentReplay);
             this->currentReplay = NULL;
             g_GameManager.currentStage = this->cursor;
             g_Supervisor.curState = SUPERVISOR_STATE_GAMEMANAGER;
@@ -1460,8 +1456,7 @@ i32 MainMenu::ReplayHandling()
         }
         if (WAS_PRESSED(TH_BUTTON_RETURNMENU))
         {
-            ReplayData *uh2 = this->currentReplay;
-            free(uh2);
+            ZUN_FREE(this->currentReplay);
             this->currentReplay = NULL;
             this->gameState = STATE_REPLAY_ANIM;
             this->stateTimer = 0;
@@ -2296,11 +2291,10 @@ ZunResult MainMenu::AddedCallback(MainMenu *m)
     return ZUN_SUCCESS;
 }
 
-#pragma var_order(i1, i2, mgr, replay)
+#pragma var_order(i1, i2, mgr)
 ZunResult MainMenu::DeletedCallback(MainMenu *menu)
 {
     AnmManager *mgr;
-    void *replay;
     i32 i1, i2;
 
     g_Supervisor.d3dDevice->ResourceManagerDiscardBytes(0);
@@ -2321,8 +2315,7 @@ ZunResult MainMenu::DeletedCallback(MainMenu *menu)
     g_Chain.Cut(menu->chainDraw);
     menu->chainDraw = NULL;
 
-    replay = menu->currentReplay;
-    free(replay);
+    ZUN_FREE(menu->currentReplay);
     return ZUN_SUCCESS;
 }
 

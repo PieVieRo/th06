@@ -54,13 +54,6 @@ bool TextHelper::ReleaseBuffer()
     }
 }
 
-#define TEXT_BUFFER_HEIGHT 64
-void TextHelper::CreateTextBuffer()
-{
-    g_Supervisor.d3dDevice->CreateImageSurface(GAME_WINDOW_WIDTH, TEXT_BUFFER_HEIGHT, D3DFMT_A1R5G5B5,
-                                               &g_TextBufferSurface);
-}
-
 bool TextHelper::AllocateBufferWithFallback(i32 width, i32 height, D3DFORMAT format)
 {
     if (this->TryAllocateBuffer(width, height, format))
@@ -86,8 +79,7 @@ struct THBITMAPINFO
 };
 
 #pragma function(memset)
-#pragma var_order(imageWidthInBytes, deviceContext, originalBitmapObj, padding, bitmapInfo, formatInfo, bitmapObj,     \
-                  bitmapData)
+#pragma var_order(imageWidthInBytes, deviceContext, originalBitmapObj, bitmapInfo, formatInfo, bitmapObj, bitmapData)
 bool TextHelper::TryAllocateBuffer(i32 width, i32 height, D3DFORMAT format)
 {
     HGDIOBJ originalBitmapObj;
@@ -95,7 +87,6 @@ bool TextHelper::TryAllocateBuffer(i32 width, i32 height, D3DFORMAT format)
     HBITMAP bitmapObj;
     FormatInfo *formatInfo;
     THBITMAPINFO bitmapInfo;
-    u32 padding;
     HDC deviceContext;
     i32 imageWidthInBytes;
 
@@ -262,6 +253,18 @@ bool TextHelper::CopyTextToSurface(IDirect3DSurface8 *outSurface)
     return true;
 }
 
+#define TEXT_BUFFER_HEIGHT 64
+void TextHelper::CreateTextBuffer()
+{
+    g_Supervisor.d3dDevice->CreateImageSurface(GAME_WINDOW_WIDTH, TEXT_BUFFER_HEIGHT, D3DFMT_A1R5G5B5,
+                                               &g_TextBufferSurface);
+}
+
+void TextHelper::ReleaseTextBuffer()
+{
+    SAFE_RELEASE(g_TextBufferSurface);
+}
+
 #pragma function(strlen)
 #pragma var_order(hdc, font, textSurfaceDesc, h, textHelper, hdc, srcRect, destRect, destSurface)
 void TextHelper::RenderTextToTexture(i32 xPos, i32 yPos, i32 spriteWidth, i32 spriteHeight, i32 fontHeight,
@@ -311,21 +314,7 @@ void TextHelper::RenderTextToTexture(i32 xPos, i32 yPos, i32 spriteWidth, i32 sp
     srcRect.bottom = fontHeight * 2 - 2;
     outTexture->GetSurfaceLevel(0, &destSurface);
     D3DXLoadSurfaceFromSurface(destSurface, NULL, &destRect, g_TextBufferSurface, NULL, &srcRect, 4, 0);
-    if (destSurface != NULL)
-    {
-        destSurface->Release();
-        destSurface = NULL;
-    }
-    return;
-}
-
-void th06::TextHelper::ReleaseTextBuffer()
-{
-    if (g_TextBufferSurface != NULL)
-    {
-        g_TextBufferSurface->Release();
-        g_TextBufferSurface = NULL;
-    }
+    SAFE_RELEASE(destSurface);
     return;
 }
 }; // namespace th06

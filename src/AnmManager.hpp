@@ -89,17 +89,11 @@ ZUN_ASSERT_SIZE(RenderVertexInfo, 0x14);
 struct AnmManager
 {
     AnmManager();
-    ~AnmManager()
-    {
-    }
+    ~AnmManager();
 
     void ReleaseVertexBuffer()
     {
-        if (this->vertexBuffer != NULL)
-        {
-            this->vertexBuffer->Release();
-            this->vertexBuffer = NULL;
-        }
+        SAFE_RELEASE(this->vertexBuffer);
     }
     void SetupVertexBuffer();
 
@@ -227,5 +221,5 @@ struct AnmManager
 ZUN_ASSERT_SIZE(AnmManager, 0x2112c);
 
 DIFFABLE_EXTERN(AnmManager *, g_AnmManager);
-DIFFABLE_EXTERN(D3DFORMAT, g_TextureFormatD3D8Mapping[6]);
+DIFFABLE_EXTERN(const D3DFORMAT, g_TextureFormatD3D8Mapping[6]);
 }; // namespace th06

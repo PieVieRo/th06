@@ -2,7 +2,7 @@
 #include "AnmManager.hpp"
 #include "ChainPriorities.hpp"
 #include "GameWindow.hpp"
-#include "Rng.hpp"
+#include "Global.hpp"
 #include "Supervisor.hpp"
 
 namespace th06
@@ -133,7 +133,7 @@ ScreenEffect *ScreenEffect::RegisterChain(i32 effect, u32 ticks, u32 effectParam
     calcChainElem = NULL;
     drawChainElem = NULL;
 
-    createdEffect = new ScreenEffect;
+    createdEffect = ZUN_NEW(ScreenEffect);
 
     if (createdEffect == NULL)
     {
@@ -283,8 +283,7 @@ ZunResult ScreenEffect::DeletedCallback(ScreenEffect *effect)
     effect->calcChainElement->deletedCallback = NULL;
     g_Chain.Cut(effect->drawChainElement);
     effect->drawChainElement = NULL;
-    delete effect;
-    effect = NULL;
+    ZUN_DELETE(effect);
 
     return ZUN_SUCCESS;
 }

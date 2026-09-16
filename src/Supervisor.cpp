@@ -4,33 +4,26 @@
 #include "Chain.hpp"
 #include "ChainPriorities.hpp"
 #include "Ending.hpp"
-#include "FileSystem.hpp"
-#include "GameErrorContext.hpp"
 #include "GameManager.hpp"
 #include "GameWindow.hpp"
+#include "Global.hpp"
 #include "MainMenu.hpp"
 #include "MusicRoom.hpp"
 #include "ReplayManager.hpp"
 #include "ResultScreen.hpp"
-#include "Rng.hpp"
 #include "SoundPlayer.hpp"
 #include "TextHelper.hpp"
 #include "i18n.hpp"
 #include "inttypes.hpp"
-#include "utils.hpp"
 
 #include <stdio.h>
 #include <string.h>
 
 namespace th06
 {
-DIFFABLE_STATIC(Supervisor, g_Supervisor)
 DIFFABLE_STATIC(ControllerMapping, g_ControllerMapping)
 DIFFABLE_STATIC(IDirect3DSurface8 *, g_TextBufferSurface)
-DIFFABLE_STATIC(u16, g_LastFrameInput);
-DIFFABLE_STATIC(u16, g_CurFrameInput);
-DIFFABLE_STATIC(u16, g_IsEigthFrameOfHeldInput);
-DIFFABLE_STATIC(u16, g_NumOfFramesInputsWereHeld);
+DIFFABLE_STATIC(Supervisor, g_Supervisor)
 
 ChainCallbackResult Supervisor::OnUpdate(Supervisor *s)
 {
@@ -325,7 +318,7 @@ ZunResult Supervisor::AddedCallback(Supervisor *s)
     s->startupTimeBeforeMenuMusic = timeGetTime();
     Supervisor::SetupDInput(s);
 
-    s->midiOutput = new MidiOutput();
+    s->midiOutput = ZUN_NEW(MidiOutput);
 
     g_Rng.Initialize(timeGetTime());
 
@@ -371,28 +364,16 @@ ZunResult Supervisor::SetupDInput(Supervisor *supervisor)
 
     if (supervisor->dinputIface->CreateDevice(GUID_SysKeyboard, &supervisor->keyboard, NULL) < 0)
     {
-        if (supervisor->dinputIface)
-        {
-            supervisor->dinputIface->Release();
-            supervisor->dinputIface = NULL;
-        }
+        SAFE_RELEASE(supervisor->dinputIface);
         g_GameErrorContext.Log(TH_ERR_DIRECTINPUT_NOT_AVAILABLE);
         return ZUN_ERROR;
     }
 
     if (supervisor->keyboard->SetDataFormat(&c_dfDIKeyboard) < 0)
     {
-        if (supervisor->keyboard)
-        {
-            supervisor->keyboard->Release();
-            supervisor->keyboard = NULL;
-        }
+        SAFE_RELEASE(supervisor->keyboard);
 
-        if (supervisor->dinputIface)
-        {
-            supervisor->dinputIface->Release();
-            supervisor->dinputIface = NULL;
-        }
+        SAFE_RELEASE(supervisor->dinputIface);
 
         g_GameErrorContext.Log(TH_ERR_DIRECTINPUT_SETDATAFORMAT_NOT_AVAILABLE);
         return ZUN_ERROR;
@@ -401,17 +382,9 @@ ZunResult Supervisor::SetupDInput(Supervisor *supervisor)
     if (supervisor->keyboard->SetCooperativeLevel(supervisor->hwndGameWindow,
                                                   DISCL_NONEXCLUSIVE | DISCL_FOREGROUND | DISCL_NOWINKEY) < 0)
     {
-        if (supervisor->keyboard)
-        {
-            supervisor->keyboard->Release();
-            supervisor->keyboard = NULL;
-        }
+        SAFE_RELEASE(supervisor->keyboard);
 
-        if (supervisor->dinputIface)
-        {
-            supervisor->dinputIface->Release();
-            supervisor->dinputIface = NULL;
-        }
+        SAFE_RELEASE(supervisor->dinputIface);
 
         g_GameErrorContext.Log(TH_ERR_DIRECTINPUT_SETCOOPERATIVELEVEL_NOT_AVAILABLE);
         return ZUN_ERROR;
@@ -467,8 +440,7 @@ ZunResult Supervisor::DeletedCallback(Supervisor *s)
     if (s->midiOutput != NULL)
     {
         s->midiOutput->StopPlayback();
-        delete s->midiOutput;
-        s->midiOutput = NULL;
+        ZUN_DELETE(s->midiOutput);
     }
     ReplayManager::SaveReplay(NULL, NULL);
     TextHelper::ReleaseTextBuffer();
@@ -476,25 +448,13 @@ ZunResult Supervisor::DeletedCallback(Supervisor *s)
     {
         s->keyboard->Unacquire();
     }
-    if (s->keyboard != NULL)
-    {
-        s->keyboard->Release();
-        s->keyboard = NULL;
-    }
+    SAFE_RELEASE(s->keyboard);
     if (s->controller != NULL)
     {
         s->controller->Unacquire();
     }
-    if (s->controller != NULL)
-    {
-        s->controller->Release();
-        s->controller = NULL;
-    }
-    if (s->dinputIface != NULL)
-    {
-        s->dinputIface->Release();
-        s->dinputIface = NULL;
-    }
+    SAFE_RELEASE(s->controller);
+    SAFE_RELEASE(s->dinputIface);
     return ZUN_SUCCESS;
 }
 
@@ -579,8 +539,7 @@ void Supervisor::ReleasePbg3(i32 pbg3FileIdx)
     // some accuracy improvements in the PBG3 handling will remove this
     // difference.
     this->pbg3Archives[pbg3FileIdx]->Release();
-    delete this->pbg3Archives[pbg3FileIdx];
-    this->pbg3Archives[pbg3FileIdx] = NULL;
+    ZUN_DELETE(this->pbg3Archives[pbg3FileIdx]);
 }
 
 i32 Supervisor::LoadPbg3(i32 pbg3FileIdx, char *filename)
@@ -588,7 +547,7 @@ i32 Supervisor::LoadPbg3(i32 pbg3FileIdx, char *filename)
     if (this->pbg3Archives[pbg3FileIdx] == NULL || strcmp(filename, this->pbg3ArchiveNames[pbg3FileIdx]) != 0)
     {
         this->ReleasePbg3(pbg3FileIdx);
-        this->pbg3Archives[pbg3FileIdx] = new Pbg3Archive();
+        this->pbg3Archives[pbg3FileIdx] = ZUN_NEW(Pbg3Archive);
         utils::DebugPrint("%s open ...\n", filename);
         if (this->pbg3Archives[pbg3FileIdx]->Load(filename) != 0)
         {
@@ -605,12 +564,11 @@ i32 Supervisor::LoadPbg3(i32 pbg3FileIdx, char *filename)
         }
         else
         {
-            delete this->pbg3Archives[pbg3FileIdx];
             // Let's really make sure this is null by nulling twice. I assume
             // there's some kind of inline function here, like it's actually
             // calling this->pbg3Archives.delete(pbg3FileIdx), followed by a
             // manual nulling?
-            this->pbg3Archives[pbg3FileIdx] = NULL;
+            ZUN_DELETE(this->pbg3Archives[pbg3FileIdx]);
             this->pbg3Archives[pbg3FileIdx] = NULL;
         }
     }
@@ -689,7 +647,7 @@ ZunResult Supervisor::LoadConfig(char *path)
             g_GameErrorContext.Log(TH_ERR_CONFIG_CORRUPTED);
         }
         g_ControllerMapping = g_Supervisor.cfg.controllerMapping;
-        free(data);
+        ZUN_FREE(data);
     }
     if (((this->cfg.opts >> GCOS_DONT_USE_VERTEX_BUF) & 1) != 0)
     {
@@ -788,22 +746,16 @@ i32 Supervisor::PlayMidiFile(i32 midiFileIdx)
 
 ZunResult Supervisor::SetupMidiPlayback(char *path)
 {
-    // There doesn't seem to be a way to recreate the jump assembly needed without gotos?
-    // Standard short circuiting boolean operators and nested conditionals don't seem to work, at least
     if (g_Supervisor.cfg.musicMode == MIDI)
     {
-        goto success;
     }
     else if (g_Supervisor.cfg.musicMode == WAV)
     {
-        goto success;
     }
     else
     {
         return ZUN_ERROR;
     }
-
-success:
     return ZUN_SUCCESS;
 }
 

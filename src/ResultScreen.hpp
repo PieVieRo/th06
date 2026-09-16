@@ -63,15 +63,6 @@ enum ResultScreenMainMenuCursor
 
 struct Th6k
 {
-    Th6k *ShiftOneByte()
-    {
-        return (Th6k *)(((u8 *)this) + 1);
-    };
-
-    Th6k *ShiftBytes(i32 value)
-    {
-        return (Th6k *)(((u8 *)this) + value);
-    };
 
     u32 magic;
     u16 th6kLen;
@@ -87,8 +78,7 @@ struct Catk
     i32 captureScore;
     u16 idx;
     u8 nameCsum;
-    u8 characterShotType;
-    u32 unk_14;
+    u8 characterShotType[5];
     char name[32];
     u32 unk_38;
     u16 numAttempts;
@@ -107,15 +97,6 @@ ZUN_ASSERT_SIZE(Clrd, 0x18);
 
 struct Pscr
 {
-    Pscr *ShiftOneByte()
-    {
-        return (Pscr *)(((u8 *)this) + 1);
-    };
-
-    Pscr *ShiftBytes(i32 value)
-    {
-        return (Pscr *)(((u8 *)this) + value);
-    };
 
     Th6k base;
     i32 score;
@@ -127,10 +108,6 @@ ZUN_ASSERT_SIZE(Pscr, 0x14);
 
 struct Hscr
 {
-    Hscr *ShiftBytes(i32 value)
-    {
-        return (Hscr *)(((u8 *)this) + value);
-    };
 
     Th6k base;
     u32 score;
@@ -145,6 +122,7 @@ struct ScoreListNode
 {
     ScoreListNode()
     {
+        FAKE_INLINE_DWORD_STACK_PADDING<4>();
         this->prev = NULL;
         this->next = NULL;
         this->data = NULL;
@@ -158,15 +136,6 @@ ZUN_ASSERT_SIZE(ScoreListNode, 0xc);
 
 struct ScoreDat
 {
-    Th6k *ShiftOneByte()
-    {
-        return (Th6k *)(((u8 *)this) + 1);
-    };
-
-    Th6k *ShiftBytes(i32 value)
-    {
-        return (Th6k *)(((u8 *)this) + value);
-    };
 
     u8 xorseed[2];
     u16 csum;
@@ -183,8 +152,7 @@ struct ResultScreen
     ResultScreen();
     ~ResultScreen()
     {
-        ScoreDat *sd = this->scoreDat;
-        free(sd);
+        ZUN_FREE(this->scoreDat);
     };
 
     static ZunResult RegisterChain(i32 unk);
@@ -231,8 +199,8 @@ struct ResultScreen
     i32 cheatCodeStep;
     char replayName[8];
     i32 unk_3c;
-    AnmVm unk_40[38];
-    AnmVm unk_28a0[16];
+    FakePaddedAnmVm unk_40[38];
+    FakePaddedAnmVm unk_28a0[16];
     AnmVm unk_39a0;
     ScoreListNode scores[HSCR_NUM_DIFFICULTIES][HSCR_NUM_CHARS_SHOTTYPES];
     Hscr defaultScore[HSCR_NUM_DIFFICULTIES][HSCR_NUM_CHARS_SHOTTYPES][HSCR_NUM_SCORES_SLOTS];

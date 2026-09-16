@@ -142,7 +142,7 @@ struct MidiOutput : MidiTimer
         tmp[2] = ((u8 *)&val)[1];
         tmp[3] = ((u8 *)&val)[0];
 
-        return *(const u32 *)tmp;
+        return *(const u32 *)(&tmp);
     }
 
     MIDIHDR *midiHeaders[32];

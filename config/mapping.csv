@@ -66,17 +66,17 @@ th06::EnemyEclInstr::ExInsShootStarPattern,0x40bb80,0x574,default,,void,Enemy*,E
 th06::EnemyEclInstr::ExInsPatchouliShottypeSetVars,0x40c100,0x75,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStage56Func4,0x40c180,0x42a,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStage5Func5,0x40c5b0,0x533,default,,void,Enemy*,EclRawInstr*
-th06::EnemyEclInstr::ExInsStage6XFunc6,0x40caf0,0x550,default,,void,Enemy*,EclRawInstr*
+th06::EnemyEclInstr::ExInsBatWingEffect,0x40caf0,0x550,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStage6Func7,0x40d040,0x3bb,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStage6Func8,0x40d400,0x125,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStage6Func9,0x40d530,0x238,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStage6Func11,0x40d770,0x1b6,default,,void,Enemy*,EclRawInstr*
-th06::EnemyEclInstr::ExInsStage6XFunc10,0x40d930,0x164,default,,void,Enemy*,EclRawInstr*
+th06::EnemyEclInstr::ExInsHandleBatTransformation,0x40d930,0x164,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStage4Func12,0x40daa0,0x114,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStageXFunc13,0x40dbc0,0xf2,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStageXFunc14,0x40dcc0,0x139,default,,void,Enemy*,EclRawInstr*
 th06::EnemyEclInstr::ExInsStageXFunc15,0x40de00,0x3ae,default,,void,Enemy*,EclRawInstr*
-th06::EnemyEclInstr::ExInsStageXFunc16,0x40e1b0,0x114,default,,void,Enemy*,EclRawInstr*
+th06::EnemyEclInstr::ExInsFlandreFinalContextUpdate,0x40e1b0,0x114,default,,void,Enemy*,EclRawInstr*
 th06::EffectManager::EffectManager,0x40e2d0,0x65,__thiscall,,u32*,EffectManager*
 th06::EffectManager::Reset,0x40e340,0x19,__thiscall,,void,EffectManager*
 th06::EffectManager::EffectCallbackRandomSplash,0x40e360,0x24d,default,,i32,Effect*
@@ -446,7 +446,7 @@ th06::CSoundManager::Initialize,0x43a800,0x8e,__thiscall,,i32,CSoundManager*,HWN
 th06::CSoundManager::SetPrimaryBufferFormat,0x43a890,0x12d,__thiscall,,long,CSoundManager*,unsigned long,unsigned long,unsigned long
 th06::CSoundManager::CreateStreaming,0x43a9c0,0x2cb,__thiscall,,long,CSoundManager*,CStreamingSound**,char*,unsigned long,_GUID,unsigned long,unsigned long,void*
 th06::CSound::CSound,0x43ac90,0xd3,__thiscall,,u32*,CSound*,IDirectSoundBuffer**,u32,u32,u32
-th06::CSound::operator_delete,0x43ad70,0x2e,__thiscall,,void*,CSound*,u32
+th06::CSound::`scalar_deleting_destructor',0x43ad70,0x2e,__thiscall,,void*,CSound*,u32
 th06::CSound::~CSound,0x43ada0,0xf1,__thiscall,,void,CSound*
 th06::CSound::FillBufferWithSound,0x43aea0,0x1e5,__thiscall,,i32,CSound*,IDirectSoundBuffer*,i32
 th06::CSound::RestoreBuffer,0x43b090,0xa3,__thiscall,,i32,CSound*,IDirectSoundBuffer*,i32*
@@ -456,7 +456,7 @@ th06::CSound::Play,0x43b240,0xb6,__thiscall,,i32,CSound*,u32,u32
 th06::CSound::Stop,0x43b300,0xa4,__thiscall,,u32,CSound*
 th06::CSound::Reset,0x43b3b0,0x6e,__thiscall,,u32,CSound*
 th06::CStreamingSound::CStreamingSound,0x43b420,0x60,__thiscall,,u32*,CStreamingSound*,IDirectSoundBuffer*,unsigned long,CWaveFile*,u32
-th06::CStreamingSound::operator_delete,0x43b480,0x2e,__thiscall,,void*,CStreamingSound*,u32
+th06::CStreamingSound::`scalar_deleting_destructor',0x43b480,0x2e,__thiscall,,void*,CStreamingSound*,u32
 th06::CStreamingSound::~CStreamingSound,0x43b4b0,0x1c,__thiscall,,void,CStreamingSound*
 th06::CStreamingSound::UpdateFadeOut,0x43b4d0,0x8f,__thiscall,,u32,CStreamingSound*
 th06::CStreamingSound::HandleWaveStreamNotification,0x43b560,0x377,__thiscall,,i32,CStreamingSound*,i32
@@ -473,27 +473,27 @@ th06::IPbg3Parser::Reset,0x43c2f0,0x13,__thiscall,,void,IPbg3Parser*
 th06::IPbg3Parser::ReadVarInt,0x43c310,0x5f,__thiscall,,u32,IPbg3Parser*
 th06::IPbg3Parser::ReadMagic,0x43c380,0x40,__thiscall,,i32,IPbg3Parser*
 th06::IPbg3Parser::ReadString,0x43c3c0,0x49,__thiscall,,i32,IPbg3Parser*,char*,u32
-th06::Pbg3ParserVtableAssign,0x43c410,0x7,__thiscall,,void,void*
-th06::IPbg3Parser::operator_delete,0x43c420,0x20,__thiscall,,Pbg3Parser*,IPbg3Parser*,u8
+th06::IPbg3Parser::~IPbg3Parser,0x43c410,0x7,__thiscall,,void,IPbg3Parser*
+th06::IPbg3Parser::`scalar_deleting_destructor',0x43c420,0x20,__thiscall,,Pbg3Parser*,IPbg3Parser*,u8
 th06::Pbg3Parser::Pbg3Parser,0x43c440,0x5a,__thiscall,,Pbg3Parser*,Pbg3Parser*
 th06::Pbg3Parser::OpenArchive,0x43c4a0,0x49,__thiscall,,u32,Pbg3Parser*,char*
 th06::Pbg3Parser::Close,0x43c4f0,0x11,__thiscall,,u8,Pbg3Parser*
 th06::Pbg3Parser::ReadBit,0x43c510,0x59,__thiscall,,i32,Pbg3Parser*
 th06::Pbg3Parser::ReadInt,0x43c570,0x7b,__thiscall,,u32,Pbg3Parser*,char
-th06::Pbg3Parser::ReadByteAssumeAligned,0x43c5f0,0x16,__thiscall,,u8,Pbg3Parser*
+th06::Pbg3Parser::ReadByte,0x43c5f0,0x16,__thiscall,,u8,Pbg3Parser*
 th06::Pbg3Parser::SeekToOffset,0x43c610,0x40,__thiscall,,u32,Pbg3Parser*,u32
 th06::Pbg3Parser::SeekToNextByte,0x43c650,0x27,__thiscall,,u32,Pbg3Parser*
 th06::Pbg3Parser::ReadByteAlignedData,0x43c680,0x25,__thiscall,,i32,Pbg3Parser*,u8*,unsigned long
 th06::Pbg3Parser::GetLastWriteTime,0x43c6b0,0x20,__thiscall,,i32,Pbg3Parser*,_FILETIME*
-th06::Pbg3Parser::ReadByte,0x43c6d0,0x8,__thiscall,,void,Pbg3Parser*
 th06::Pbg3Parser::~Pbg3Parser,0x43c6e0,0x69,__thiscall,,void,Pbg3Parser*
-th06::Pbg3Parser::operator_delete,0x43c750,0x1e,__thiscall,,Pbg3Parser*,Pbg3Parser*,u8
+th06::Pbg3Parser::`scalar_deleting_destructor',0x43c750,0x1e,__thiscall,,Pbg3Parser*,Pbg3Parser*,u8
 th06::Pbg3Archive::Pbg3Archive,0x43c770,0x13,__thiscall,,void,Pbg3Archive*
 th06::Pbg3Archive::ParseHeader,0x43c790,0x131,__thiscall,,i32,Pbg3Archive*
 th06::Pbg3Archive::Release,0x43c8d0,0x4e,__thiscall,,u32,Pbg3Archive*
 th06::Pbg3Archive::FindEntry,0x43c920,0x64,__thiscall,,u32,Pbg3Archive*,char*
 th06::Pbg3Archive::GetEntrySize,0x43c990,0x25,__thiscall,,u32,Pbg3Archive*,u32
 th06::Pbg3Archive::ReadEntryRaw,0x43c9c0,0xbd,__thiscall,,u8*,Pbg3Archive*,i32*,i32*,i32
+th06::Pbg3Archive::~Pbg3Archive,0x43ca80,0x5,unknown,,u8
 th06::Pbg3Archive::Load,0x43ca90,0xa5,__thiscall,,i32,Pbg3Archive*,char*
 th06::Pbg3Archive::ReadDecompressEntry,0x43cb40,0x2f1,__thiscall,,u8*,Pbg3Archive*,u32,char*
 th06::FileAbstraction::FileAbstraction,0x43ce40,0x17,__thiscall,,void,FileAbstraction*
@@ -993,7 +993,7 @@ FUN_0045b991,0x45b991,0x38,unknown,,u8
 FUN_0045b9c9,0x45b9c9,0x17,unknown,,u8
 vsprintf,0x45b9e0,0x57,__stdcall,,i32,char*,char*,char*
 _report_failure,0x45ba37,0x29,unknown,,u8
-__security_check_cookie,0x45ba68,0xe,__fastcall,,void,unsigned long
+___security_check_cookie,0x45ba68,0xe,__fastcall,,void,unsigned long
 __ftol2,0x45ba78,0x75,default,,long,f32
 _free,0x45baed,0x68,__cdecl,,void,void*
 FUN_0045bb40,0x45bb40,0x9,unknown,,u8
@@ -1037,7 +1037,7 @@ __abnormal_termination,0x45c342,0x23,__cdecl,,i32
 __NLG_Notify1,0x45c365,0x17,unknown,,u8
 __NLG_Notify,0x45c36e,0xa,__stdcall,,void,unsigned long
 sprintf,0x45c386,0x58,__stdcall,varargs,i32,char*,char*
-FUN_0045c3e0,0x45c3e0,0x1f,__stdcall,,void
+___EH_prolog,0x45c3e0,0x1f,__stdcall,,void
 _fabs,0x45c3ff,0xb1,__cdecl,,double,double
 FID_conflict:__CItan_default,0x45c4b0,0x14,unknown,,u8
 tan,0x45c4c4,0x9,__stdcall,,double,double
