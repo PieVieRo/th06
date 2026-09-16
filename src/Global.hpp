@@ -279,4 +279,11 @@ class GameErrorContext
 };
 
 DIFFABLE_EXTERN(GameErrorContext, g_GameErrorContext)
+
+template <size_t N>
+__forceinline void FAKE_INLINE_DWORD_STACK_PADDING()
+{
+    i32 pad[N];
+}
+
 }; // namespace th06

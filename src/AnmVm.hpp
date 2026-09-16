@@ -204,4 +204,12 @@ struct AnmVm
     // Two final padding bytes
 };
 ZUN_ASSERT_SIZE(AnmVm, 0x110);
+
+struct PaddedAnmVm : AnmVm
+{
+    PaddedAnmVm()
+    {
+        FAKE_INLINE_DWORD_STACK_PADDING<4>();
+    }
+};
 }; // namespace th06

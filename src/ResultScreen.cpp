@@ -1310,11 +1310,10 @@ u32 ResultScreen::DrawFinalStats()
     return 0;
 }
 
-#pragma var_order(resultScreen, unused)
 ZunResult ResultScreen::RegisterChain(i32 unk)
 {
+    FAKE_INLINE_DWORD_STACK_PADDING<16>();
 
-    i32 unused[16];
     ResultScreen *resultScreen;
     resultScreen = ZUN_NEW(ResultScreen);
 
@@ -1352,7 +1351,6 @@ ZunResult ResultScreen::RegisterChain(i32 unk)
 #pragma function(memset)
 ResultScreen::ResultScreen()
 {
-    i32 pad[4];
     memset(this, 0, sizeof(ResultScreen));
     this->cursor = 1;
 }
