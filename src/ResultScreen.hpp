@@ -122,6 +122,7 @@ struct ScoreListNode
 {
     ScoreListNode()
     {
+        FAKE_INLINE_DWORD_STACK_PADDING<4>();
         this->prev = NULL;
         this->next = NULL;
         this->data = NULL;
@@ -198,8 +199,8 @@ struct ResultScreen
     i32 cheatCodeStep;
     char replayName[8];
     i32 unk_3c;
-    AnmVm unk_40[38];
-    AnmVm unk_28a0[16];
+    FakePaddedAnmVm unk_40[38];
+    FakePaddedAnmVm unk_28a0[16];
     AnmVm unk_39a0;
     ScoreListNode scores[HSCR_NUM_DIFFICULTIES][HSCR_NUM_CHARS_SHOTTYPES];
     Hscr defaultScore[HSCR_NUM_DIFFICULTIES][HSCR_NUM_CHARS_SHOTTYPES][HSCR_NUM_SCORES_SLOTS];

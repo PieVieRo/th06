@@ -22,11 +22,6 @@ namespace th06
 DIFFABLE_STATIC(HANDLE, g_ExclusiveMutex)
 }
 
-inline void fake_func()
-{
-    int pad;
-}
-
 #pragma var_order(renderResult, testCoopLevelRes, msg, testResetRes)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
@@ -83,7 +78,7 @@ restart:
         // this is the most likely place an inlined function
         // with an unused variable would be, since the branch
         // is empty otherwise...
-        fake_func();
+        FAKE_INLINE_DWORD_STACK_PADDING<1>();
     }
     else
     {

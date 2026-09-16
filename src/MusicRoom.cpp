@@ -108,7 +108,6 @@ ZunBool MusicRoom::ProcessInput()
 
 ZunResult MusicRoom::RegisterChain()
 {
-    i32 pad[12];
     static MusicRoom g_MusicRoom;
     MusicRoom *musicRoom;
 

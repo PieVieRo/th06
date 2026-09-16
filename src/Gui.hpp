@@ -82,6 +82,15 @@ struct GuiMsgVm
     u32 fontSize;
     u32 ignoreWaitCounter;
     u8 dialogueSkippable;
+
+    GuiMsgVm()
+    {
+        FAKE_INLINE_DWORD_STACK_PADDING<24>();
+        // this doesn't match without the extra block, do not remove
+        {
+            FAKE_INLINE_DWORD_STACK_PADDING<1>();
+        }
+    }
 };
 ZUN_ASSERT_SIZE(GuiMsgVm, 0x6a8);
 
